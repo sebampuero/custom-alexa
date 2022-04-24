@@ -1,0 +1,17 @@
+{
+    "base_dir": "/home/pi/voice_control/talk2pi/talk2pi/",
+    "bg": {
+        "voice_alert": 0,
+        "low_th": 90,
+        "very_low_th": 70,
+        "up_th": 300,
+        "dangerous_for_down1": 105,
+        "dangerous_for_down2": 140,
+        "semi_dangerous_for_down1": 100,
+        "semi_dangerous_for_down2": 130,
+        "voice_alerts_pause_ts": 1650746303
+    },
+    "log": {
+        "output_file": "/home/pi/output.log"
+    }
+}
