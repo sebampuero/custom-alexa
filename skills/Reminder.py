@@ -23,8 +23,10 @@ class Reminder(Skill):
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self.__last_stored_reminder = ""
-        self.__parsers = [parser for parser in default_parsers if parser == 'timestamp']
-
+        self.__settings = {
+            "DEFAULT_LANGUAGES": ["es"],
+            "PREFER_DATES_FROM": "future"
+        }
 
     def __split_transcript(self, transcript: str) -> typing.Tuple[str, str]:
         phrased_date = transcript.split(re.search(Reminder.REMINDER, transcript).group(0))[0]
@@ -34,7 +36,7 @@ class Reminder(Skill):
     def trigger(self, transcript: str) -> typing.Tuple[bool, str]:
         if re.search(Reminder.REMINDER, transcript):
             phrased_date, actual_reminder = self.__split_transcript(transcript)
-            parsed_date = dateparser.parse(phrased_date, settings={'PARSERS': self.__parsers})
+            parsed_date = dateparser.parse(phrased_date, settings=self.__settings)
             if parsed_date:
                 timestamp = parsed_date.timestamp()
                 if int(timestamp) < int(datetime.now().timestamp()):

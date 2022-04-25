@@ -1,9 +1,11 @@
+from email.generator import Generator
 import logging
 from utils.config import open_config
 logging.basicConfig(format='%(asctime)s %(message)s', filename=open_config()['log']['output_file'], filemode="w")
 from utils.speak import say_text
 import RPi.GPIO as GPIO
 from google.cloud import speech
+from google.api_core.exceptions import InvalidArgument
 from cronjob.scheduler import start_scheduler
 import ResumableMicrophoneStream
 import sys
@@ -21,7 +23,8 @@ logger.setLevel(logging.INFO)
 SAMPLE_RATE = 16000
 CHUNK_SIZE = int(SAMPLE_RATE / 10)  # 100ms
 READY_TO_TALK_PIN = 27
-HOT_WORD_SENSIVITY=0.18
+HOT_WORD_SENSIVITY=0.25
+CAPTURE_TIMEOUT=30 # max of 2 bills
 
 os.putenv('SDL_VIDEODRIVER', 'dummy')
 pygame.init()
@@ -62,28 +65,28 @@ for entry in os.scandir(BASE_DIR + "skills"):
         skills[skill_name] = skill_class(skill_name)
 
 
-def start_snowboy():
+def start_snowboy() -> None:
     global snowboy
     stop_led(READY_TO_TALK_PIN)
     snowboy = snowboydecoder.HotwordDetector(model, sensitivity=HOT_WORD_SENSIVITY)
     logger.info("Listening for hotword")
-    snowboy.start(detected_callback=start_command_capture, sleep_time=0.1)
+    snowboy.start(detected_callback=start_command_capture)
 
-def setup_led(ledpin):
+def setup_led(ledpin) -> None:
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(ledpin, GPIO.OUT)
 
-def start_led(ledpin):
+def start_led(ledpin) -> None:
     setup_led(ledpin)
     GPIO.output(ledpin, GPIO.HIGH)
 
 
-def stop_led(ledpin):
+def stop_led(ledpin) -> None:
     setup_led(ledpin)
     GPIO.output(ledpin, GPIO.LOW)
 
 
-def process_transcript(responses):
+def process_transcript(responses) -> str:
     for response in responses:
         if not response.results:
             continue
@@ -92,40 +95,43 @@ def process_transcript(responses):
             continue
         transcript = result.alternatives[0].transcript
         if result.is_final:
-            logger.info("Transcript: %s result: %s", transcript, str(result))
             return transcript
 
-def open_stream_to_google():
+def get_transcript_from_google() -> str:
     mic_manager = ResumableMicrophoneStream.ResumableMicrophoneStream(
-        SAMPLE_RATE, CHUNK_SIZE)
-    audio_generator = mic_manager.generator()
-    requests = (
-        speech.StreamingRecognizeRequest(audio_content=content)
-        for content in audio_generator
-    )
-    responses = client.streaming_recognize(
-        requests=requests, config=streaming_config, timeout=29
-    )
-    return process_transcript(responses), mic_manager
+            SAMPLE_RATE, CHUNK_SIZE)
+    final_transcript = ""
+    try:
+        audio_generator = mic_manager.generator()
+        requests = (
+            speech.StreamingRecognizeRequest(audio_content=content)
+            for content in audio_generator
+        )
+        responses = client.streaming_recognize(
+            requests=requests, config=streaming_config, timeout=CAPTURE_TIMEOUT
+        )
+        final_transcript = process_transcript(responses)
+    except InvalidArgument:
+        logger.error("Timeout reached", exc_info=True)
+    except Exception:
+        logger.error("Something bad happened", exc_info=True)
+    finally:
+        mic_manager.terminate()
+        return final_transcript
         
-
 def start_command_capture():
     global snowboy
     snowboy.terminate()
     start_led(READY_TO_TALK_PIN)
-    try:
-        transcript, mic_manager = open_stream_to_google()
+    transcript = get_transcript_from_google()
+    if not transcript == "":
         logger.info("Processing: %s", transcript)
         commands_results_map, skill_if_diverged = process_command_transcript_result(transcript)
         if not skill_if_diverged == "":
-            mic_manager.terminate()
             return proceed_with_diverge(skill_if_diverged)
         evaluate_results(commands_results_map)
-    except Exception:
-        logger.error("Error while transmiting to Google", exc_info=True)
-    mic_manager.terminate()
-    start_snowboy()
-
+    return start_snowboy()
+        
 def proceed_with_diverge(skill_module: str):
     if skill_module == skills['Chat'].START_CHAT:
         continous_talk_with_gpt()
@@ -133,17 +139,11 @@ def proceed_with_diverge(skill_module: str):
 def continous_talk_with_gpt():
     while True:
         start_led(READY_TO_TALK_PIN)
-        transcript, mic_manager = open_stream_to_google()
-        try:
-            if transcript == skills['Chat'].STOP_CHAT:
-                mic_manager.terminate()
-                return start_snowboy()
-            stop_led(READY_TO_TALK_PIN)
-            skills['Chat'].transmit_to_gpt3(transcript)
-        except Exception:
-            logger.error("Error while transmiting to Google", exc_info=True)
-            return mic_manager.terminate()
-        mic_manager.terminate()
+        transcript = get_transcript_from_google()
+        if transcript == skills['Chat'].STOP_CHAT or transcript == "":
+            return start_snowboy()
+        stop_led(READY_TO_TALK_PIN)
+        skills['Chat'].transmit_to_gpt3(transcript)
 
 def evaluate_results(commands_results_map: typing.Dict[str, int]):
     for command, counter in commands_results_map.items():
@@ -174,5 +174,5 @@ if not test_mode:
     start_scheduler()
     stop_led(READY_TO_TALK_PIN)
     start_led(READY_TO_TALK_PIN)
-    time.sleep(3)
+    time.sleep(2)
     start_snowboy()

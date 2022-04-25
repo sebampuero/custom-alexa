@@ -15,8 +15,8 @@ LESS_DANGER_DOWN = "FortyFiveDown"
 UP_RAPID = "SingleUp"
 UP_SLOW = "FortyFiveUp"
 TEN_MINUTES = 600
-THIRTY_MINUTES = 1800
-FORTY_MINUTES = 2400
+NO_VALUES_DOWN_THRESHOLD = 1200
+NO_VALUES_UP_THRESHOLD = 1500
 BASE_URL = os.getenv("NIGHTSCOUT_BASE_URL")
 
 active = False
@@ -32,9 +32,9 @@ def uploader_active():
             send_email("Valores de azucar reanudados")
         active = True
         return True
-    elif current_ts - ts > THIRTY_MINUTES and current_ts - ts < FORTY_MINUTES:
+    elif current_ts - ts > NO_VALUES_DOWN_THRESHOLD and current_ts - ts < NO_VALUES_UP_THRESHOLD:
         if active:
-            send_email("Sin valores de azucar desde hace mas de 30 minutos")
+            send_email("Sin valores de azucar desde hace mas de 20 minutos")
         active = False
         return False
 

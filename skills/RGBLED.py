@@ -16,17 +16,14 @@ class RGBLED(Skill):
 
     def trigger(self, transcript: str) -> typing.Tuple[bool, str]:
         if transcript == RGBLED.TURN_ON_OFF_RGB:
-            print("turning on/off led")
             os.system('irsend SEND_ONCE rgbled KEY_F1')
             return True, RGBLED.TURN_ON_OFF_RGB
         elif transcript == RGBLED.BRIGHTNESS_UP:
-            print("brightness up")
             for i in range(0, 3):
                 os.system('irsend SEND_ONCE rgbled KEY_F4')
                 time.sleep(0.2)
             return True, RGBLED.BRIGHTNESS_UP
         elif transcript == RGBLED.BRIGHTNESS_DOWN:
-            print("brightness down")
             for i in range(0, 3):
                 os.system('irsend SEND_ONCE rgbled KEY_F3')
                 time.sleep(0.2)
@@ -52,3 +49,4 @@ class RGBLED(Skill):
         elif transcript == RGBLED.YELLOW_LED:
             os.system('irsend SEND_ONCE rgbled KEY_F24')
             return True, RGBLED.YELLOW_LED
+        return False, transcript
