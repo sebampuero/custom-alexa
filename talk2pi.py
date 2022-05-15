@@ -20,10 +20,12 @@ logger.setLevel(logging.INFO)
 
 
 # Google audio recording parameters and config
-SAMPLE_RATE = 16000
-CHUNK_SIZE = int(SAMPLE_RATE / 10)  # 100ms
+#16000
+SAMPLE_RATE = 44100
+CHUNK_SIZE = 4096
+#int(SAMPLE_RATE / 10)  # 100ms
 READY_TO_TALK_PIN = 27
-HOT_WORD_SENSIVITY=0.25
+HOT_WORD_SENSIVITY=0.05
 CAPTURE_TIMEOUT=30 # max of 2 bills
 
 os.putenv('SDL_VIDEODRIVER', 'dummy')

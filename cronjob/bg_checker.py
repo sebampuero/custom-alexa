@@ -19,24 +19,14 @@ NO_VALUES_DOWN_THRESHOLD = 1200
 NO_VALUES_UP_THRESHOLD = 1500
 BASE_URL = os.getenv("NIGHTSCOUT_BASE_URL")
 
-active = False
-
 def uploader_active():
-    global active
     endpoint = "entries.json"
     response = requests.request('GET', BASE_URL + endpoint).json()
     ts = response[0]['date'] / 1000
     current_ts = datetime.now().timestamp()
     if current_ts - ts < TEN_MINUTES:
-        if not active:
-            send_email("Valores de azucar reanudados")
-        active = True
         return True
-    elif current_ts - ts > NO_VALUES_DOWN_THRESHOLD and current_ts - ts < NO_VALUES_UP_THRESHOLD:
-        if active:
-            send_email("Sin valores de azucar desde hace mas de 20 minutos")
-        active = False
-        return False
+    return False
 
 def check_req_ch():
     bg_config = open_config()['bg']
@@ -77,10 +67,6 @@ def check_latest_bg():
         if bg_config['voice_alert'] and current_ts > bg_config['voice_alerts_pause_ts']:
             say_text(f'Belina en una bajada de azúcar!')
         send_email(f'Belina esta muy baja con {bg_level} y tendencia {tendency}')
-    elif bg_level >= bg_config["up_th"]:
-        if bg_config['voice_alert'] and current_ts > bg_config['voice_alerts_pause_ts']:
-            say_text(f'Belina alta con {bg_level}')
-        send_email(f'Belina alta con {bg_level} con tendencia {tendency}')
 
 def call_nightscout_api():
     try:

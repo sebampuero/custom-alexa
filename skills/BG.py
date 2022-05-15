@@ -11,7 +11,6 @@ class BG(Skill):
 
     DEACTIVATE_VOICE_ALARM = "apaga alarma de azúcar"
     ACTIVATE_VOICE_ALARM = "enciende alarma de azúcar"
-    HIGH_TH = r"umbral (de )?azúcar alto (\d{2,3})"
     LAST_BG_VALUE = "último azúcar"
     VOICE_ALARM_PAUSE = r"pausa (de )?alarmas por (\d{2,3}) (minutos|segundos)"
 
@@ -39,19 +38,6 @@ class BG(Skill):
             bg_config['bg']['voice_alert'] = 1
             write_config(bg_config)
             return True, BG.ACTIVATE_VOICE_ALARM
-        elif re.search(BG.HIGH_TH, transcript):
-            try:
-                new_high_th = int(re.search(BG.HIGH_TH, transcript).group(2))
-                if new_high_th > 200 and new_high_th < 400:
-                    bg_config['bg']['up_th'] = new_high_th
-                    write_config(bg_config)
-                    say_text(f"{new_high_th} mg/dl puesto")
-                else:
-                    say_text(f"{new_high_th} fuera de parámetros")
-                return True, BG.HIGH_TH
-            except ValueError as e:
-                say_text("Valor inválido")
-                return True, BG.HIGH_TH
         elif transcript == BG.LAST_BG_VALUE:
             response = requests.request('GET', BG.BASE_URL + "entries.json?find[sgv][$gt]=40")
             response = response.json()
