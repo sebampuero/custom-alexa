@@ -8,9 +8,22 @@
         "dangerous_for_down2": 140,
         "semi_dangerous_for_down1": 100,
         "semi_dangerous_for_down2": 130,
-        "voice_alerts_pause_ts": 1652536338
+        "voice_alerts_pause_ts": 1656058966
+    },
+    "heater": {
+        "min_temp": 19.8,
+        "max_temp": 20.0,
+        "non_operative_hours": "1-9",
+        "at_home": true,
+        "force_off": false
+    },
+    "movement_detector": {
+        "bed_sensor_threshold": 80,
+        "bed_sensor_ip": "192.168.0.11",
+        "desk_sensor_ip": "192.168.0.7",
+        "desk_sensor_threshold": 110
     },
     "log": {
-        "output_file": "/home/pi/output.log"
+        "output_file": "/home/pi/alexa_output.log"
     }
 }

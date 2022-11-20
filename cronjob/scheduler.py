@@ -1,14 +1,16 @@
-import threading, time, schedule, traceback
+import threading, time, schedule
 from cronjob.reminder_cronjob import lookup_closest_remider
 from cronjob.bg_checker import call_nightscout_api
+from cronjob.heater import start_electric_heater
 import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-FIRST_INTERVAL_5_MINS = 300
-SECOND_INTERVAL_10_MINS = 600
+INTERVAL_5_MINUTES = 300
+INTERVAL_1_MINUTE = 60
+INTERVAL_HALF_MINUTE = 30
 
 def run_continuously(scheduler, interval=1):
     cease_continuous_run = threading.Event()
@@ -18,30 +20,35 @@ def run_continuously(scheduler, interval=1):
         @classmethod
         def run(cls):
             while not cease_continuous_run.is_set():
+                logger.info(f"Checking pending schedulers on Thread {threading.get_ident()}")
                 scheduler.run_pending()
                 time.sleep(interval)
+            scheduler.cancel_job()
 
     continuous_thread = ScheduleThread()
     continuous_thread.start()
     return cease_continuous_run
 
 
-def background_job():
+def five_minute():
     lookup_closest_remider()
+
+def one_minute():
     call_nightscout_api()
+    start_electric_heater()
 
 def start_scheduler():
     logger.info("Starting scheduler")
     scheduler1 = schedule.Scheduler()
-    #scheduler2 = schedule.Scheduler()
-    stop_run_continuously = run_continuously(scheduler1, interval=FIRST_INTERVAL_5_MINS)
-    #stop_run_continuously2 = run_continuously(scheduler2, interval=SECOND_INTERVAL_10_MINS)
+    scheduler2 = schedule.Scheduler()
+    stop_run_continuously = run_continuously(scheduler1, interval=INTERVAL_5_MINUTES)
+    stop_run_continuously2 = run_continuously(scheduler2, interval=INTERVAL_1_MINUTE)
     try:
-        scheduler1.every(FIRST_INTERVAL_5_MINS).seconds.do(background_job)
-        #scheduler2.every(SECOND_INTERVAL_10_MINS).seconds.do(second_background_job)
+        scheduler1.every(INTERVAL_5_MINUTES).seconds.do(five_minute)
+        scheduler2.every(INTERVAL_1_MINUTE).seconds.do(one_minute)
     except Exception as e:
         logger.error(f"{e} while starting scheduler", exc_info=True)
         stop_run_continuously.set()
-        #stop_run_continuously2.set()
-        time.sleep(60.0)
+        stop_run_continuously2.set()
+        time.sleep(10.0)
         start_scheduler()

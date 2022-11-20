@@ -6,6 +6,10 @@ import requests
 from datetime import datetime
 import re, os
 import typing
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class BG(Skill):
 
@@ -15,6 +19,7 @@ class BG(Skill):
     VOICE_ALARM_PAUSE = r"pausa (de )?alarmas por (\d{2,3}) (minutos|segundos)"
 
     BASE_URL = os.getenv("NIGHTSCOUT_BASE_URL")
+    JWT = os.getenv("NIGHTSCOUT_JWT")
 
     TENDENCY_MAP = {
         "SingleDown": "Cayendo a más de 3mg por minuto",
@@ -39,7 +44,7 @@ class BG(Skill):
             write_config(bg_config)
             return True, BG.ACTIVATE_VOICE_ALARM
         elif transcript == BG.LAST_BG_VALUE:
-            response = requests.request('GET', BG.BASE_URL + "entries.json?find[sgv][$gt]=40")
+            response = requests.request('GET', BG.BASE_URL + f"entries.json?token={BG.JWT}")
             response = response.json()
             bg_level = response[0]['sgv']
             tendency = response[0]['direction']
@@ -47,6 +52,7 @@ class BG(Skill):
             seconds_delta = int(datetime.now().timestamp() - ts)
             human_time = seconds_to_human_readable(seconds_delta)
             say_text(f"{bg_level} {BG.TENDENCY_MAP[tendency]} hace {human_time}")
+            logger.info(f"Human time was read as: {human_time}")
             return True, BG.LAST_BG_VALUE
         elif re.search(BG.VOICE_ALARM_PAUSE, transcript):
             pause_time = int(re.search(BG.VOICE_ALARM_PAUSE, transcript).group(2))

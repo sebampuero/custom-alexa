@@ -1,12 +1,13 @@
-from email.generator import Generator
 import logging
+from logging.handlers import TimedRotatingFileHandler
 from utils.config import open_config
-logging.basicConfig(format='%(asctime)s %(message)s', filename=open_config()['log']['output_file'], filemode="w")
+#logging.basicConfig(format='%(asctime)s %(message)s', filename=open_config()['log']['output_file'], filemode="w")
 from utils.speak import say_text
 import RPi.GPIO as GPIO
 from google.cloud import speech
 from google.api_core.exceptions import InvalidArgument
 from cronjob.scheduler import start_scheduler
+from pi_concurrent.MovementDetector import MovementDetector
 import ResumableMicrophoneStream
 import sys
 import snowboydecoder
@@ -15,7 +16,11 @@ import pygame
 import typing
 import os, importlib
 
-logger = logging.getLogger(__name__)
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+handler = TimedRotatingFileHandler(open_config()['log']['output_file'], when='d')
+handler.setFormatter(formatter)
+logger = logging.getLogger()
+logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
@@ -25,8 +30,9 @@ SAMPLE_RATE = 44100
 CHUNK_SIZE = 4096
 #int(SAMPLE_RATE / 10)  # 100ms
 READY_TO_TALK_PIN = 27
-HOT_WORD_SENSIVITY=0.05
-CAPTURE_TIMEOUT=30 # max of 2 bills
+DID_NOT_UNDERSTAND_PIN = 4
+HOT_WORD_SENSIVITY=0.1
+CAPTURE_TIMEOUT=30 # seconds
 
 os.putenv('SDL_VIDEODRIVER', 'dummy')
 pygame.init()
@@ -70,6 +76,7 @@ for entry in os.scandir(BASE_DIR + "skills"):
 def start_snowboy() -> None:
     global snowboy
     stop_led(READY_TO_TALK_PIN)
+    stop_led(DID_NOT_UNDERSTAND_PIN)
     snowboy = snowboydecoder.HotwordDetector(model, sensitivity=HOT_WORD_SENSIVITY)
     logger.info("Listening for hotword")
     snowboy.start(detected_callback=start_command_capture)
@@ -150,7 +157,8 @@ def continous_talk_with_gpt():
 def evaluate_results(commands_results_map: typing.Dict[str, int]):
     for command, counter in commands_results_map.items():
         if counter == len(skills.keys()):
-            say_text(f"{command} no es un comando")
+            start_led(DID_NOT_UNDERSTAND_PIN)
+            say_text(f"No entendí {command}")
 
 def process_command_transcript_result(transcript: str) -> typing.Tuple[typing.Dict[str, int], str]:
     transcript = transcript.lower()
@@ -174,6 +182,7 @@ def process_command_transcript_result(transcript: str) -> typing.Tuple[typing.Di
 
 if not test_mode:
     start_scheduler()
+    MovementDetector().start()
     stop_led(READY_TO_TALK_PIN)
     start_led(READY_TO_TALK_PIN)
     time.sleep(2)

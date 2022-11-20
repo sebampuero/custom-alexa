@@ -1,6 +1,7 @@
 import redis
 import typing
 import logging
+from operator import itemgetter 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -71,3 +72,9 @@ def remove_reminder_like(to_remove: str) -> typing.Tuple[str, str]:
             r.zrem("reminders", reminder)
             return reminder, str(scheduled_time)
     return "", "0"
+
+def save_kv_pair_of_hashname(key: str, name: str, val: str):
+    r.hset(name, key=key, value=val)
+
+def get_kv_pair_of_hashname(key: str, name: str) -> str:
+    return r.hget(name, key)

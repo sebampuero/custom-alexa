@@ -1,5 +1,6 @@
 from utils.speak import say_text
 from datetime import datetime
+from dateutil.parser import parse
 from utils.email_sender import send_email
 from utils.config import open_config
 import requests
@@ -12,53 +13,50 @@ logger.setLevel(logging.INFO)
 DANGER_DOWN = "SingleDown"
 SUPER_DANGER_DOWN = "DoubleDown"
 LESS_DANGER_DOWN = "FortyFiveDown"
-UP_RAPID = "SingleUp"
-UP_SLOW = "FortyFiveUp"
 TEN_MINUTES = 600
-NO_VALUES_DOWN_THRESHOLD = 1200
-NO_VALUES_UP_THRESHOLD = 1500
+CARBS_MIN_THRESH = 15
 BASE_URL = os.getenv("NIGHTSCOUT_BASE_URL")
+JWT = os.getenv("NIGHTSCOUT_JWT")
+BELLINA_TOPIC_ARN = os.getenv("SNS_TOPIC_ARN_BELLINA")
+MAX_CH_CHECKS = 8
 
-def uploader_active():
-    endpoint = "entries.json"
-    response = requests.request('GET', BASE_URL + endpoint).json()
-    ts = response[0]['date'] / 1000
-    current_ts = datetime.now().timestamp()
-    if current_ts - ts < TEN_MINUTES:
-        return True
-    return False
+last_ch_check = 0
+last_bg_check = 0
+last_ch_required = 0
 
 def check_req_ch():
-    bg_config = open_config()['bg']
+    global last_ch_check
     carbs_req_pattern = r"(\d{1,2}) add.* req w\/in (\d{1,2})m"
-    endpoint = "devicestatus.json"
+    endpoint = f"devicestatus?token={JWT}"
     response = requests.request('GET', BASE_URL + endpoint).json()
     suggest_reason = response[0]['openaps']['suggested']['reason']
+    ts = parse(response[0]['created_at']).timestamp()
+    if last_ch_check == ts:
+        return
+    last_ch_check = ts
     if re.search(carbs_req_pattern, suggest_reason):
         req_carbs = re.search(carbs_req_pattern, suggest_reason).group(1)
-        in_minutes = re.search(carbs_req_pattern, suggest_reason).group(2)
-        logger.info(f"Required: {req_carbs} in {in_minutes} minutes")
-        if int(req_carbs) > 0:
-            send_email(f"{req_carbs} ch requeridos en {in_minutes} minutos, chequear APS y comer!")
-            if int(datetime.now().timestamp()) > bg_config['voice_alerts_pause_ts']:
-                say_text(f"{req_carbs} carbos se necesitan o se entrará pronto en bajada de azúcar")
-
+        in_minutes = int(re.search(carbs_req_pattern, suggest_reason).group(2))
+        if in_minutes <= 15:
+            logger.info(f"Required: {req_carbs} in {in_minutes} minutes")
+            send_email(f"{req_carbs} ch requeridos en {in_minutes} minutos")
+            send_email(f"{int(int(req_carbs)/2)} ch requeridos en {in_minutes} minutos.", BELLINA_TOPIC_ARN)
+                
 def check_latest_bg():
+    global last_bg_check
     bg_config = open_config()['bg']
-    endpoint = "entries.json?find[sgv][$gt]=30"
+    endpoint = f"entries.json?token={JWT}"
     response = requests.request('GET', BASE_URL + endpoint).json()
     bg_level = response[0]['sgv']
     tendency = response[0]['direction']
+    ts = int(response[0]['date'] / 1000)
+    if last_bg_check == ts and response[0]["isValid"]:
+        return
+    last_bg_check = ts
     current_ts = int(datetime.now().timestamp())
     logger.info("BG: %s TENDENCY: %s", str(bg_level), tendency)
     if bg_level <= bg_config["dangerous_for_down2"] and bg_level >= bg_config["dangerous_for_down1"] and (tendency == DANGER_DOWN or tendency == SUPER_DANGER_DOWN):
-        if current_ts > bg_config['voice_alerts_pause_ts']:
-            say_text(f"El azúcar cae muy rápido y está en {bg_level}")
-        send_email(f'{bg_level} y {tendency}, para la insulina !!!')
-    elif bg_level <= bg_config["semi_dangerous_for_down2"] and bg_level >= bg_config['semi_dangerous_for_down1'] and (tendency == LESS_DANGER_DOWN):
-        if bg_config['voice_alert'] and current_ts > bg_config['voice_alerts_pause_ts']:
-            say_text(f'Azúcar en {bg_level} y bajando, será mejor parar la insulina')
-        send_email(f"Bellina con {bg_level} y {tendency}, parar la insulina por un rato")
+        send_email(f'{bg_level} y {tendency}, mucho cuidado!')
     elif bg_level <= bg_config["low_th"] and ( tendency == DANGER_DOWN or tendency == LESS_DANGER_DOWN or tendency == SUPER_DANGER_DOWN):
         if bg_config['voice_alert'] and current_ts > bg_config['voice_alerts_pause_ts']:
             say_text(f'Belina con valores peligrosos de {bg_level} y tendencia hacia abajo')
@@ -70,8 +68,7 @@ def check_latest_bg():
 
 def call_nightscout_api():
     try:
-        if uploader_active():
-            check_latest_bg()
-            check_req_ch()
+        check_latest_bg()
+        check_req_ch()
     except Exception:
         logger.error('While checking bg values', exc_info=True)

@@ -1,3 +1,6 @@
+from datetime import datetime
+import time
+
 DAYS_OF_WEEK = {
     0: 'Lunes',
     1: 'Martes',
@@ -7,6 +10,14 @@ DAYS_OF_WEEK = {
     5: 'Sábado',
     6: 'Domingo'
 }
+
+def todays_timestamp():
+    today = datetime.today().strftime('%Y-%m-%d')
+    return int(time.mktime(datetime.strptime(today, "%Y-%m-%d").timetuple()))
+
+def is_unix_timestamp(value: int) -> bool:
+    value = str(value)
+    return len(value) == 10
 
 def seconds_to_minutes(seconds: int) -> int:
     if seconds <= 60:

@@ -44,13 +44,13 @@ def delete_last_reminder(last_reminder_key):
     return redis_db.remove_last_reminder(last_reminder_key)
 
 def get_last_reminder() -> str:
-    try:
-        return get_reminders()[0][0] # first obj in tuple in list
-    except:
-        return None
+    return get_reminders()[0][0] # first obj in tuple in list
 
 def remove_reminder_like(to_remove: str) -> typing.Tuple[str, str]:
-    try:
-        return redis_db.remove_reminder_like(to_remove)
-    except:
-        return "", "0"
+    return redis_db.remove_reminder_like(to_remove)
+
+def get_attr_of(attr: str, name: str) -> str:
+    return redis_db.get_kv_pair_of_hashname(attr, name)
+
+def save_attr_of(attr: str, name: str, val: str):
+    redis_db.save_kv_pair_of_hashname(attr, name, val)

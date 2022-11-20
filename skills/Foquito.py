@@ -18,7 +18,7 @@ class Foquito(Skill):
     SLEEP_MODE = "modo dormir"
 
     def __setup_tuya(self):
-        d = tinytuya.BulbDevice('bf271ed537afe4e631oqwl', '192.168.0.2', os.getenv("BULB_KEY"))
+        d = tinytuya.BulbDevice('bf271ed537afe4e631oqwl', '192.168.0.3', os.getenv("BULB_KEY"))
         d.set_version(3.3)
         return d
 
