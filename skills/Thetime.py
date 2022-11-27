@@ -77,9 +77,8 @@ class Thetime(Skill):
             weather_url_today = Thetime.URL + Thetime.BASE_PATH_CURRENT
             response = requests.request("GET", weather_url_today)
             response = response.json()
-            say_text(f'La sensación de temperatura es {response["current"]["feelslike_c"]} y la real es {response["current"]["temp_c"]}')
             weather_condition_code = response['current']['condition']['code']
-            say_text(self.__get_condition_es(weather_condition_code))
+            say_text(f'La sensación de temperatura es {response["current"]["feelslike_c"]} y la real es {response["current"]["temp_c"]}. {self.__get_condition_es(weather_condition_code)}') 
             return True, Thetime.WEATHER_NOW
         elif transcript ==  Thetime.FORECAST_NEXT_2_DAY:
             forecast_url = Thetime.URL + Thetime.BASE_PATH_FORECAST + "&days=4&aqi=no&alerts=no"

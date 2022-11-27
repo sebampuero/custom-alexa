@@ -15,6 +15,7 @@ class Heater(Skill):
     TODAY_HEATER_TIME = r"(tiempo) (del )?(calefactor) (hoy)"
     MIN_TEMP = r"(temperatura )?(mínima)"
     MAX_TEMP = r"(temperatura )?(máxima)"
+    LAST_DAYS = r"(tiempo) (del )?(calefactor) (últimos) \d{1,2} (días)"
 
     def __update_temp(self, min_or_max: str, transcript: str) -> None:
         heater_conf = open_config()
@@ -38,4 +39,16 @@ class Heater(Skill):
         elif re.match(Heater.MAX_TEMP, transcript):
             self.__update_temp('max_temp', transcript)
             return True, Heater.MAX_TEMP
+        elif re.match(Heater.LAST_DAYS, transcript):
+            days = int(re.search(r'\d{1,2}', transcript).group(0))
+            real_days = days
+            all = 0
+            for i in range(0,days):
+                ts = todays_timestamp() - i * 86400
+                total = get_attr_of("total_seconds", f"heater:{ts}")
+                all += int(total) if total else 0
+                if not total:
+                    days -= 1
+            say_text(f"Promedio últimos {real_days} días: {seconds_to_human_readable(int(all/days))}")
+            return True, Heater.LAST_DAYS
         return False, transcript

@@ -10,11 +10,12 @@ from cronjob.scheduler import start_scheduler
 from pi_concurrent.MovementDetector import MovementDetector
 import ResumableMicrophoneStream
 import sys
-import snowboydecoder
 import time
-import pygame
 import typing
 import os, importlib
+import struct
+import pyaudio
+import pvporcupine
 
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 handler = TimedRotatingFileHandler(open_config()['log']['output_file'], when='d')
@@ -34,37 +35,24 @@ DID_NOT_UNDERSTAND_PIN = 4
 HOT_WORD_SENSIVITY=0.1
 CAPTURE_TIMEOUT=30 # seconds
 
-os.putenv('SDL_VIDEODRIVER', 'dummy')
-pygame.init()
-
 BASE_DIR = open_config()['base_dir']
 
 test_mode = False
 
-# Snowboy object placeholder
-snowboy = None
-
 # Dictionary of skills
 skills = {}
 
-# Path to the hotword model file
-try:
-    model = sys.argv[1]
-except IndexError:
-    print("Testing mode")
-    test_mode = True  
 
-if not test_mode:
-    client = speech.SpeechClient()
-    config = speech.RecognitionConfig(
-        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-        sample_rate_hertz=SAMPLE_RATE,
-        language_code="es-ES",
-        max_alternatives=1,
-    )
-    streaming_config = speech.StreamingRecognitionConfig(
-        config=config, interim_results=True
-    )
+client = speech.SpeechClient()
+config = speech.RecognitionConfig(
+    encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+    sample_rate_hertz=SAMPLE_RATE,
+    language_code="es-ES",
+    max_alternatives=1,
+)
+streaming_config = speech.StreamingRecognitionConfig(
+    config=config, interim_results=True
+)
 
 for entry in os.scandir(BASE_DIR + "skills"):
     if (entry.name.endswith(".py") and not entry.name == "Skill.py"): #Abstract class
@@ -73,13 +61,32 @@ for entry in os.scandir(BASE_DIR + "skills"):
         skills[skill_name] = skill_class(skill_name)
 
 
-def start_snowboy() -> None:
-    global snowboy
+def start_porcupine() -> None:
+    # https://picovoice.ai/
     stop_led(READY_TO_TALK_PIN)
     stop_led(DID_NOT_UNDERSTAND_PIN)
-    snowboy = snowboydecoder.HotwordDetector(model, sensitivity=HOT_WORD_SENSIVITY)
     logger.info("Listening for hotword")
-    snowboy.start(detected_callback=start_command_capture)
+    porcupine = pvporcupine.create(access_key=os.getenv("PORCUPINE_KEY"), 
+        keyword_paths=[f'{BASE_DIR}pocurpine/alexa.ppn'], 
+        model_path=f'{BASE_DIR}pocurpine/es_model.pv')
+    pa = pyaudio.PyAudio()
+    audio_stream = pa.open(
+                    rate=porcupine.sample_rate,
+                    channels=1,
+                    format=pyaudio.paInt16,
+                    input=True,
+                    frames_per_buffer=porcupine.frame_length)
+    while True:
+        pcm = audio_stream.read(porcupine.frame_length)
+        pcm = struct.unpack_from("h" * porcupine.frame_length, pcm)
+
+        keyword_index = porcupine.process(pcm)
+
+        if keyword_index >= 0:
+            porcupine.delete()
+            audio_stream.close()
+            pa.terminate()
+            start_command_capture()
 
 def setup_led(ledpin) -> None:
     GPIO.setmode(GPIO.BCM)
@@ -129,8 +136,6 @@ def get_transcript_from_google() -> str:
         return final_transcript
         
 def start_command_capture():
-    global snowboy
-    snowboy.terminate()
     start_led(READY_TO_TALK_PIN)
     transcript = get_transcript_from_google()
     if not transcript == "":
@@ -139,7 +144,7 @@ def start_command_capture():
         if not skill_if_diverged == "":
             return proceed_with_diverge(skill_if_diverged)
         evaluate_results(commands_results_map)
-    return start_snowboy()
+    return start_porcupine()
         
 def proceed_with_diverge(skill_module: str):
     if skill_module == skills['Chat'].START_CHAT:
@@ -150,7 +155,7 @@ def continous_talk_with_gpt():
         start_led(READY_TO_TALK_PIN)
         transcript = get_transcript_from_google()
         if transcript == skills['Chat'].STOP_CHAT or transcript == "":
-            return start_snowboy()
+            return start_porcupine()
         stop_led(READY_TO_TALK_PIN)
         skills['Chat'].transmit_to_gpt3(transcript)
 
@@ -180,10 +185,11 @@ def process_command_transcript_result(transcript: str) -> typing.Tuple[typing.Di
                 return bad_commands_counter, skills['Chat'].START_CHAT
     return bad_commands_counter, ""
 
-if not test_mode:
+if __name__ == "__main__":
     start_scheduler()
     MovementDetector().start()
     stop_led(READY_TO_TALK_PIN)
     start_led(READY_TO_TALK_PIN)
     time.sleep(2)
-    start_snowboy()
+    start_porcupine()
+    

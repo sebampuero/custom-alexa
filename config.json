@@ -1,5 +1,5 @@
 {
-    "base_dir": "/home/pi/voice_control/talk2pi/talk2pi/",
+    "base_dir": "/home/pi/talk2pi/",
     "bg": {
         "voice_alert": 0,
         "low_th": 90,
@@ -11,8 +11,8 @@
         "voice_alerts_pause_ts": 1656058966
     },
     "heater": {
-        "min_temp": 19.8,
-        "max_temp": 20.0,
+        "min_temp": 20.5,
+        "max_temp": 20.7,
         "non_operative_hours": "1-9",
         "at_home": true,
         "force_off": false
@@ -20,7 +20,7 @@
     "movement_detector": {
         "bed_sensor_threshold": 80,
         "bed_sensor_ip": "192.168.0.11",
-        "desk_sensor_ip": "192.168.0.7",
+        "desk_sensor_ip": "192.168.0.14",
         "desk_sensor_threshold": 110
     },
     "log": {
