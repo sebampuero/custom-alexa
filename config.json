@@ -11,10 +11,10 @@
         "voice_alerts_pause_ts": 1656058966
     },
     "heater": {
-        "min_temp": 20.5,
-        "max_temp": 20.7,
+        "min_temp": 20.0,
+        "max_temp": 20.5,
         "non_operative_hours": "1-9",
-        "at_home": true,
+        "at_home": false,
         "force_off": false
     },
     "movement_detector": {

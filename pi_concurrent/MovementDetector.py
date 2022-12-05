@@ -17,11 +17,11 @@ class MovementDetector(threading.Thread):
     '''
 
     def __init__(self) -> None:
-        super().__init__()
+        super().__init__(daemon=True, name="MovementDetector")
         self.counter = 0
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.s.bind((HOST, PORT))
-        logger.info("Listening on {0}:{1}".format(HOST, PORT))
+        logger.info("Listening on {0}:{1}_{2}".format(HOST, PORT, MovementDetector.name))
         self.movement_inside_detected_already = False
 
     def run(self) -> None:

@@ -17,6 +17,9 @@ def run_continuously(scheduler, interval=1):
 
     class ScheduleThread(threading.Thread):
 
+        def __init__(self) -> None:
+            super().__init__(daemon=True)
+
         @classmethod
         def run(cls):
             while not cease_continuous_run.is_set():

@@ -8,8 +8,8 @@ from google.cloud import speech
 from google.api_core.exceptions import InvalidArgument
 from cronjob.scheduler import start_scheduler
 from pi_concurrent.MovementDetector import MovementDetector
+from pi_concurrent.KeypadCommandDelegator import KeypadCommandDelegator
 import ResumableMicrophoneStream
-import sys
 import time
 import typing
 import os, importlib
@@ -67,7 +67,7 @@ def start_porcupine() -> None:
     stop_led(DID_NOT_UNDERSTAND_PIN)
     logger.info("Listening for hotword")
     porcupine = pvporcupine.create(access_key=os.getenv("PORCUPINE_KEY"), 
-        keyword_paths=[f'{BASE_DIR}pocurpine/alexa.ppn'], 
+        keyword_paths=[f'{BASE_DIR}pocurpine/Roberta.ppn'], 
         model_path=f'{BASE_DIR}pocurpine/es_model.pv')
     pa = pyaudio.PyAudio()
     audio_stream = pa.open(
@@ -188,6 +188,7 @@ def process_command_transcript_result(transcript: str) -> typing.Tuple[typing.Di
 if __name__ == "__main__":
     start_scheduler()
     MovementDetector().start()
+    KeypadCommandDelegator().start()
     stop_led(READY_TO_TALK_PIN)
     start_led(READY_TO_TALK_PIN)
     time.sleep(2)
