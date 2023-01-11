@@ -1,5 +1,5 @@
 import logging
-from logging.handlers import TimedRotatingFileHandler
+from logging.handlers import RotatingFileHandler
 from utils.config import open_config
 #logging.basicConfig(format='%(asctime)s %(message)s', filename=open_config()['log']['output_file'], filemode="w")
 from utils.speak import say_text
@@ -18,7 +18,7 @@ import pyaudio
 import pvporcupine
 
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-handler = TimedRotatingFileHandler(open_config()['log']['output_file'], when='d')
+handler = RotatingFileHandler(open_config()['log']['output_file'], maxBytes=5*1024*1024, backupCount=1)
 handler.setFormatter(formatter)
 logger = logging.getLogger()
 logger.addHandler(handler)
@@ -67,7 +67,7 @@ def start_porcupine() -> None:
     stop_led(DID_NOT_UNDERSTAND_PIN)
     logger.info("Listening for hotword")
     porcupine = pvporcupine.create(access_key=os.getenv("PORCUPINE_KEY"), 
-        keyword_paths=[f'{BASE_DIR}pocurpine/Roberta.ppn'], 
+        keyword_paths=[f'{BASE_DIR}pocurpine/alexa.ppn'], 
         model_path=f'{BASE_DIR}pocurpine/es_model.pv')
     pa = pyaudio.PyAudio()
     audio_stream = pa.open(
@@ -117,6 +117,7 @@ def get_transcript_from_google() -> str:
     mic_manager = ResumableMicrophoneStream.ResumableMicrophoneStream(
             SAMPLE_RATE, CHUNK_SIZE)
     final_transcript = ""
+    start_led(READY_TO_TALK_PIN)
     try:
         audio_generator = mic_manager.generator()
         requests = (
@@ -136,7 +137,6 @@ def get_transcript_from_google() -> str:
         return final_transcript
         
 def start_command_capture():
-    start_led(READY_TO_TALK_PIN)
     transcript = get_transcript_from_google()
     if not transcript == "":
         logger.info("Processing: %s", transcript)

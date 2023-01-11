@@ -41,7 +41,7 @@ class MovementDetector(threading.Thread):
                     plug_config['heater']['at_home'] = True
                     write_config(plug_config)
                     self.movement_inside_detected_already = True
-                logger.info(f"Movement detected at home. Distance: {dist} threshold: {threshold}")
+                    logger.info(f"Movement detected at home. Distance: {dist} threshold: {threshold}")
             self.counter += 1
             if self.counter == NO_MOVEMENT_THRESHOLD:
                 plug_config = open_config()

@@ -25,7 +25,7 @@ class KeypadCommandDelegator(threading.Thread):
     def run(self) -> None:
         while True:
             val = self.s.recv(4).decode()
-            logger.info(f"Received {val} from keypad")
+            logger.debug(f"Received {val} from keypad")
             if val == 'D':
                 self.stack.clear()
             elif val == '#':
