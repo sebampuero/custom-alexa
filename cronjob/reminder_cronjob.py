@@ -5,7 +5,7 @@ from utils.email_sender import send_email
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 
 MARGIN = 200 # seconds

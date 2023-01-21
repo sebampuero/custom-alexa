@@ -8,7 +8,7 @@ from utils.speak import say_text
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 class Chat(Skill):
 

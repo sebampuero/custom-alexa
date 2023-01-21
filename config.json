@@ -1,5 +1,5 @@
 {
-    "base_dir": "/home/pi/talk2pi/",
+    "base_dir": "/home/pi/talk2pi",
     "bg": {
         "voice_alert": 0,
         "low_th": 90,
@@ -11,8 +11,8 @@
         "voice_alerts_pause_ts": 1656058966
     },
     "heater": {
-        "min_temp": 18.0,
-        "max_temp": 18.5,
+        "min_temp": 18.5,
+        "max_temp": 18.8,
         "non_operative_hours": "1-9",
         "at_home": true,
         "force_off": false

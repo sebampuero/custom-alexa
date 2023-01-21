@@ -8,7 +8,7 @@ import logging
 import re, os
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 DANGER_DOWN = "SingleDown"
 SUPER_DANGER_DOWN = "DoubleDown"

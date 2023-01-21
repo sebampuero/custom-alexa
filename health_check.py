@@ -7,7 +7,7 @@ import re
 import subprocess
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 OUTPUT_FILE = open_config()['log']['output_file']
 TIMESTAMP_PATTERN = r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})"
@@ -38,7 +38,7 @@ def check_if_healthy():
     now_ts = int(datetime.now().timestamp())
     logger.info("Checking health of Alexa")
     if now_ts - ts > MAX_UNHEALTHY_TIME and is_alexa_running():
-        restart = subprocess.run(['bash', f'{open_config()["base_dir"]}restart.sh'], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        restart = subprocess.run(['bash', f'{open_config()["base_dir"]}/restart.sh'], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         if restart.returncode == 0:
             send_email("Se reinició a Alexa")
         else:

@@ -54,7 +54,7 @@ streaming_config = speech.StreamingRecognitionConfig(
     config=config, interim_results=True
 )
 
-for entry in os.scandir(BASE_DIR + "skills"):
+for entry in os.scandir(BASE_DIR + "/skills"):
     if (entry.name.endswith(".py") and not entry.name == "Skill.py"): #Abstract class
         skill_name = os.path.splitext(entry.name)[0]
         skill_class = getattr(importlib.import_module(name=f"skills.{skill_name}"), skill_name)
@@ -67,8 +67,8 @@ def start_porcupine() -> None:
     stop_led(DID_NOT_UNDERSTAND_PIN)
     logger.info("Listening for hotword")
     porcupine = pvporcupine.create(access_key=os.getenv("PORCUPINE_KEY"), 
-        keyword_paths=[f'{BASE_DIR}pocurpine/alexa.ppn'], 
-        model_path=f'{BASE_DIR}pocurpine/es_model.pv')
+        keyword_paths=[f'{BASE_DIR}/pocurpine/alexa.ppn'], 
+        model_path=f'{BASE_DIR}/pocurpine/es_model.pv')
     pa = pyaudio.PyAudio()
     audio_stream = pa.open(
                     rate=porcupine.sample_rate,

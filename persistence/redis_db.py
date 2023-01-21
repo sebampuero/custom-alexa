@@ -4,7 +4,7 @@ import logging
 from operator import itemgetter 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 HOST = "localhost"
 PORT = 6379

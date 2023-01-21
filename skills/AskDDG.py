@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 from skills.Skill import Skill
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 class AskDDG(Skill):
 

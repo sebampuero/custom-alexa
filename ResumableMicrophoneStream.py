@@ -4,7 +4,7 @@ import logging
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 class ResumableMicrophoneStream:
     """Opens a recording stream as a generator yielding the audio chunks."""

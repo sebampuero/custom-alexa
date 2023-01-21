@@ -9,7 +9,7 @@ import typing
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 class BG(Skill):
 

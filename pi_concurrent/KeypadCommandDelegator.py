@@ -1,17 +1,18 @@
 import socket
 import threading
 import logging
+import subprocess
 from utils.config import open_config, write_config
 from utils.speak import say_text
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 HOST = "0.0.0.0"
 PORT = 9010
 
 MIN_TEMP_CMD = 'A'
 MAX_TEMP_CMD = 'B'
+RESTART_ALEXA = 'C'
 
 class KeypadCommandDelegator(threading.Thread):
 
@@ -39,17 +40,24 @@ class KeypadCommandDelegator(threading.Thread):
                 continue
             cmd = ''.join(self.stack[0:idx])
             if cmd == MIN_TEMP_CMD:
-                self.__edit_temp(self.stack[idx:], min=True)
+                self._edit_temp(self.stack[idx:], min=True)
                 break
             elif cmd == MAX_TEMP_CMD:
-                self.__edit_temp(self.stack[idx:], min=False)
+                self._edit_temp(self.stack[idx:], min=False)
                 break
+            elif cmd == RESTART_ALEXA:
+                self._restart_alexa()
             else:
                 say_text(f"{cmd} no es válido")
                 break
         self.stack.clear()
 
-    def __edit_temp(self, value: list, min: bool):
+    def _restart_alexa(self):
+        say_text("Ejecutando reinicio")
+        config = open_config()
+        subprocess.run(["bash", f"{config['base_dir']}/restart.sh"], stdout=subprocess.DEVNULL)
+
+    def _edit_temp(self, value: list, min: bool):
         try:
             heater_conf = open_config()
             temp = float(''.join(value).replace('*', '.'))

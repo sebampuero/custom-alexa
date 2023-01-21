@@ -5,7 +5,7 @@ import logging
 import os
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 MAIN_TOPIC_ARN = os.getenv("SNS_TOPIC_ARN")
 
 def send_email(text, topic=None):

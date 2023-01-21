@@ -4,7 +4,7 @@ import socket
 from utils.email_sender import send_email
 from utils.config import open_config, write_config
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 HOST = "0.0.0.0"
 PORT = 9000

@@ -5,7 +5,7 @@ from cronjob.heater import start_electric_heater
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 
 INTERVAL_5_MINUTES = 300

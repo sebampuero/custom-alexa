@@ -12,7 +12,7 @@ import dateparser
 from dateparser_data.settings import default_parsers
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 class Thetime(Skill):
 
@@ -28,7 +28,7 @@ class Thetime(Skill):
 
     def __init__(self, name: str) -> None:
         super().__init__(name)
-        with open(open_config()["base_dir"] + "conditions.json", 'r') as f:
+        with open(open_config()["base_dir"] + "/conditions.json", 'r') as f:
             self.__conditions = json.loads(f.read())
             self.__settings = { #TODO: pack to timeutils
                 "DEFAULT_LANGUAGES": ["es"],

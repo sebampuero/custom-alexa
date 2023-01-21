@@ -12,7 +12,7 @@ from persistence.operations import get_attr_of, save_attr_of
 import requests #using requests instead of async requests because lazyness
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 EMAIL = os.environ.get('MEROSS_EMAIL')
 PASSWORD = os.environ.get('MEROSS_PASSWORD')

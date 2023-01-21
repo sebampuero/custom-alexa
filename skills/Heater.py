@@ -8,7 +8,7 @@ from persistence.operations import get_attr_of
 from utils.config import open_config, write_config
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 class Heater(Skill):
 
