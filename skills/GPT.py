@@ -19,18 +19,18 @@ class GPT(Skill):
         question_phrase = transcript.split(GPT.QA)
         if len(question_phrase) == 2:
             question = question_phrase[1].strip()
-            response = openai.Completion.create(
-                engine="curie",
-                prompt="Q: " + question + "?\nA:",
+            messages = []
+            messages.append({"role": "user", "content": question})
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=messages,
+                max_tokens=250,
                 temperature=0.7,
-                max_tokens=100,
                 top_p=1,
                 frequency_penalty=1,
-                presence_penalty=1,
-                stop=["\nQ:"]
-                )
-            actual_response = response.choices[0].text.strip().replace('A: ', '')
+                presence_penalty=1
+            )
             logger.info(str(response))
-            say_text(actual_response)
+            say_text(response['choices'][0]['message']['content'])
             return True, GPT.QA
         return False, transcript

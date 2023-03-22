@@ -25,20 +25,20 @@ class Chat(Skill):
             return True, Chat.START_CHAT
         return False, transcript
     
-    def transmit_to_gpt3(self, text):
-        intro = "La siguiente es una conversación con una inteligencia artificial. La inteligencia artificial es amigable aveces.\n\n"
+    def transmit_to_gpt3(self, text): #TODO: change with chat module and not completions
+        intro = "La siguiente es una conversación con una inteligencia artificial. La inteligencia artificial es amigable.\n\n"
         if self.__conversation_history == "":
             self.__conversation_history = intro + "Humano:" + text + "\nIA:"
         else:
             self.__conversation_history = self.__conversation_history + "\nHumano:" + text + "\nIA:"
         response = openai.Completion.create(
-            engine="davinci",
+            engine="text-davinci-002",
             prompt=self.__conversation_history,
             temperature=0.9,
-            max_tokens=100,
+            max_tokens=250,
             top_p=1,
             frequency_penalty=0,
-            presence_penalty=0.6,
+            presence_penalty=0,
             stop=["\n", "\nHumano:", "\nIA:"]
             )
         actual_response = response.choices[0].text.strip()

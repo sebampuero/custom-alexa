@@ -11,8 +11,8 @@
         "voice_alerts_pause_ts": 1656058966
     },
     "heater": {
-        "min_temp": 18.5,
-        "max_temp": 18.8,
+        "min_temp": 19.0,
+        "max_temp": 20.0,
         "non_operative_hours": "1-9",
         "at_home": true,
         "force_off": false
