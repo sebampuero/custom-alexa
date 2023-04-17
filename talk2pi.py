@@ -16,6 +16,9 @@ import os, importlib
 import struct
 import pyaudio
 import pvporcupine
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk import pos_tag
 
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 handler = RotatingFileHandler(open_config()['log']['output_file'], maxBytes=5*1024*1024, backupCount=1)
@@ -166,6 +169,8 @@ def evaluate_results(commands_results_map: typing.Dict[str, int]):
             say_text(f"No entendí {command}")
 
 def process_command_transcript_result(transcript: str) -> typing.Tuple[typing.Dict[str, int], str]:
+    tokens = word_tokenize(transcript.lower())
+    print(pos_tag(tokens))
     transcript = transcript.lower()
     commands = transcript.split(' y ')
     bad_commands_counter = dict()

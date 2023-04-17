@@ -39,7 +39,7 @@ async def main():
     manager = MerossManager(http_client=http_api_client)
     await manager.async_device_discovery()
     plugs = manager.find_devices(device_type="mss110")
-    device = plugs[0]
+    device = plugs[1]
     await device.async_update()
     if float(indoor_temp) <= plug_config['min_temp'] and not device.is_on() \
             and plug_config['at_home'] and not outside_operative_hours(plug_config) and not plug_config['force_off']:
