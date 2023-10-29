@@ -25,7 +25,7 @@ handler = RotatingFileHandler(open_config()['log']['output_file'], maxBytes=5*10
 handler.setFormatter(formatter)
 logger = logging.getLogger()
 logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.ERROR)
 
 
 # Google audio recording parameters and config
@@ -193,7 +193,6 @@ def process_command_transcript_result(transcript: str) -> typing.Tuple[typing.Di
 if __name__ == "__main__":
     start_scheduler()
     MovementDetector().start()
-    KeypadCommandDelegator().start()
     stop_led(READY_TO_TALK_PIN)
     start_led(READY_TO_TALK_PIN)
     time.sleep(2)

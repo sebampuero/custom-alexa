@@ -40,7 +40,7 @@ def check_req_ch():
         if in_minutes <= 15:
             logger.info(f"Required: {req_carbs} in {in_minutes} minutes")
             send_email(f"{req_carbs} ch requeridos en {in_minutes} minutos")
-            send_email(f"{int(int(req_carbs)/2)} ch requeridos en {in_minutes} minutos.", BELLINA_TOPIC_ARN)
+            #send_email(f"{int(int(req_carbs)/2)} ch requeridos en {in_minutes} minutos.", BELLINA_TOPIC_ARN)
                 
 def check_latest_bg():
     global last_bg_check

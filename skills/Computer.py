@@ -15,6 +15,6 @@ class Computer(Skill):
             return True,Computer.TURN_ON_PC
         elif re.match(Computer.TURN_OFF_PC, transcript):
             print("Turning off pc")
-            os.system("sudo net rpc -S 192.168.0.6 -U shutdowner\%sexoduro shutdown -t 1 -f")#uses samba common package
+            os.system("sudo net rpc -S 192.168.0.25 -U shutdowner\%sexoduro shutdown -t 1 -f")#uses samba common package
             return True, Computer.TURN_OFF_PC
         return False, transcript
