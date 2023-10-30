@@ -14,13 +14,13 @@
         "min_temp": 20.0,
         "max_temp": 20.4,
         "non_operative_hours": "1-9",
-        "at_home": false,
+        "at_home": true,
         "force_off": false
     },
     "movement_detector": {
         "bed_sensor_threshold": 80,
-        "bed_sensor_ip": "192.168.0.11",
-        "desk_sensor_ip": "192.168.0.14",
+        "bed_sensor_id": "BED",
+        "desk_sensor_id": "DESKTOP",
         "desk_sensor_threshold": 110
     },
     "log": {

@@ -8,7 +8,6 @@ from google.cloud import speech
 from google.api_core.exceptions import InvalidArgument
 from cronjob.scheduler import start_scheduler
 from pi_concurrent.MovementDetector import MovementDetector
-from pi_concurrent.KeypadCommandDelegator import KeypadCommandDelegator
 import ResumableMicrophoneStream
 import time
 import typing
