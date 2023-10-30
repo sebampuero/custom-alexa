@@ -6,7 +6,7 @@ from utils.speak import say_text
 from skills.Skill import Skill
 import typing
 import logging
-from utils.config import open_config
+from utils.config import ConfigHandler
 from utils.time_utils import DAYS_OF_WEEK
 import dateparser
 from dateparser_data.settings import default_parsers
@@ -28,7 +28,7 @@ class Thetime(Skill):
 
     def __init__(self, name: str) -> None:
         super().__init__(name)
-        with open(open_config()["base_dir"] + "/conditions.json", 'r') as f:
+        with open(ConfigHandler().open_config()["base_dir"] + "/conditions.json", 'r') as f:
             self.__conditions = json.loads(f.read())
             self.__settings = { #TODO: pack to timeutils
                 "DEFAULT_LANGUAGES": ["es"],

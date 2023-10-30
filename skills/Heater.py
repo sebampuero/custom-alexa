@@ -5,7 +5,7 @@ import logging
 from utils.speak import say_text
 from utils.time_utils import todays_timestamp, seconds_to_human_readable
 from persistence.operations import get_attr_of
-from utils.config import open_config, write_config
+from utils.config import ConfigHandler
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +18,12 @@ class Heater(Skill):
     LAST_DAYS = r"(tiempo) (del )?(calefactor) (últimos) \d{1,2} (días)"
 
     def __update_temp(self, min_or_max: str, transcript: str) -> None:
-        heater_conf = open_config()
+        heater_conf = ConfigHandler().open_config()
         temp = re.search(r'\d{2}((,| coma )\d{1,2})?', transcript).group(0) # search for 20,4 or 20 or 20 coma 4
         if "coma" or ',' in temp:
             temp = float(temp.replace(' coma ', '.').replace(',', '.'))
         heater_conf['heater'][min_or_max] = temp
-        write_config(heater_conf)
+        ConfigHandler().write_config(heater_conf)
 
     def trigger(self, transcript: str) -> typing.Tuple[bool, str]:
         if re.match(Heater.TODAY_HEATER_TIME, transcript):

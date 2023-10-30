@@ -6,7 +6,7 @@ import time
 from meross_iot.http_api import MerossHttpClient
 from meross_iot.manager import MerossManager
 from utils.time_utils import todays_timestamp
-from utils.config import open_config
+from utils.config import ConfigHandler
 from utils.time_utils import todays_timestamp, is_unix_timestamp
 from persistence.operations import get_attr_of, save_attr_of
 import requests #using requests instead of async requests because lazyness
@@ -31,7 +31,7 @@ def outside_operative_hours(config: dict) -> bool:
     return now.hour >= int(config['non_operative_hours'].split('-')[0]) and now.hour <= int(config['non_operative_hours'].split('-')[1])
 
 async def main():
-    plug_config = open_config()['heater']
+    plug_config = ConfigHandler().open_config()['heater']
     indoor_temp = requests.request('GET', "http://192.168.0.10/temp").text
     if not indoor_temp:
         return None

@@ -1,6 +1,6 @@
 import logging
 from logging.handlers import RotatingFileHandler
-from utils.config import open_config
+from utils.config import ConfigHandler
 #logging.basicConfig(format='%(asctime)s %(message)s', filename=open_config()['log']['output_file'], filemode="w")
 from utils.speak import say_text
 import RPi.GPIO as GPIO
@@ -20,7 +20,7 @@ from nltk.tokenize import word_tokenize
 from nltk import pos_tag
 
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-handler = RotatingFileHandler(open_config()['log']['output_file'], maxBytes=5*1024*1024, backupCount=1)
+handler = RotatingFileHandler(ConfigHandler().open_config()['log']['output_file'], maxBytes=5*1024*1024, backupCount=1)
 handler.setFormatter(formatter)
 logger = logging.getLogger()
 logger.addHandler(handler)
@@ -37,7 +37,7 @@ DID_NOT_UNDERSTAND_PIN = 4
 HOT_WORD_SENSIVITY=0.1
 CAPTURE_TIMEOUT=30 # seconds
 
-BASE_DIR = open_config()['base_dir']
+BASE_DIR = ConfigHandler().open_config()['base_dir']
 
 test_mode = False
 

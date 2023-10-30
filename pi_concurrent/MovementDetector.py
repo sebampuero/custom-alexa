@@ -2,7 +2,7 @@ import threading
 import logging
 import socket
 from utils.email_sender import send_email
-from utils.config import open_config, write_config
+from utils.config import ConfigHandler
 logger = logging.getLogger(__name__)
 import paho.mqtt.client as mqtt
 
@@ -29,7 +29,7 @@ class MovementDetector(threading.Thread):
     def on_message(self, client, userdata, msg):
         logger.debug("Message: " + msg.payload.decode())
         threshold = 0
-        sensor_config = open_config()['movement_detector']
+        sensor_config = ConfigHandler().open_config()['movement_detector']
         dist = int(msg.payload.decode().split(',')[0])
         sensor_id = msg.payload.decode().split(',')[1]
         if sensor_id == sensor_config['bed_sensor_id']:
@@ -39,16 +39,16 @@ class MovementDetector(threading.Thread):
         if  dist <= threshold:
             self.counter = 0
             if not self.movement_inside_detected_already:
-                plug_config = open_config()
+                plug_config = ConfigHandler().open_config()
                 plug_config['heater']['at_home'] = True
-                write_config(plug_config)
+                ConfigHandler().write_config(plug_config)
                 self.movement_inside_detected_already = True
                 logger.info(f"Movement detected at home. Distance: {dist} threshold: {threshold}")
         self.counter += 1
         if self.counter == NO_MOVEMENT_THRESHOLD:
-            plug_config = open_config()
+            plug_config = ConfigHandler().open_config()
             plug_config['heater']['at_home'] = False
-            write_config(plug_config)
+            ConfigHandler().write_config(plug_config)
             logger.info(f"No more movement detected, not at home. Distance: {dist} threshold: {threshold}")
             send_email(f"Nadie en casa, 0 movimiento detectado.")
             self.movement_inside_detected_already =  False

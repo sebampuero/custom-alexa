@@ -1,6 +1,6 @@
 from skills.Skill import Skill
 from utils.speak import say_text
-from utils.config import open_config,write_config
+from utils.config import ConfigHandler
 from utils.time_utils import seconds_to_human_readable, minutes_to_seconds
 import requests
 from datetime import datetime
@@ -32,16 +32,16 @@ class BG(Skill):
     }
 
     def trigger(self, transcript) -> typing.Tuple[bool, str]:
-        bg_config = open_config()
+        bg_config = ConfigHandler().open_config()
         if BG.DEACTIVATE_VOICE_ALARM in transcript:
             say_text("Desactivando alarmas de azúcar por voz")
             bg_config['bg']['voice_alert'] = 0
-            write_config(bg_config)
+            ConfigHandler().write_config(bg_config)
             return True, BG.DEACTIVATE_VOICE_ALARM
         elif BG.ACTIVATE_VOICE_ALARM in transcript:
             say_text("Activando alarmas de azúcar por voz")
             bg_config['bg']['voice_alert'] = 1
-            write_config(bg_config)
+            ConfigHandler().write_config(bg_config)
             return True, BG.ACTIVATE_VOICE_ALARM
         elif transcript == BG.LAST_BG_VALUE:
             response = requests.request('GET', BG.BASE_URL + f"entries.json?token={BG.JWT}")
@@ -60,7 +60,7 @@ class BG(Skill):
             pause_time_ts = minutes_to_seconds(pause_time) + int(datetime.now().timestamp()) \
                 if time_unit == "minutos" else pause_time + int(datetime.now().timestamp())
             bg_config['bg']['voice_alerts_pause_ts'] = pause_time_ts
-            write_config(bg_config)
+            ConfigHandler().write_config(bg_config)
             say_text(f"Pausa de alertas por {pause_time} {time_unit}")
             return True, BG.VOICE_ALARM_PAUSE
         return False, transcript

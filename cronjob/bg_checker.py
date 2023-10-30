@@ -2,7 +2,7 @@ from utils.speak import say_text
 from datetime import datetime
 from dateutil.parser import parse
 from utils.email_sender import send_email
-from utils.config import open_config
+from utils.config import ConfigHandler
 import requests
 import logging
 import re, os
@@ -44,7 +44,7 @@ def check_req_ch():
                 
 def check_latest_bg():
     global last_bg_check
-    bg_config = open_config()['bg']
+    bg_config = ConfigHandler().open_config()['bg']
     endpoint = f"entries.json?token={JWT}"
     response = requests.request('GET', BASE_URL + endpoint).json()
     bg_level = response[0]['sgv']
