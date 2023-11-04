@@ -168,8 +168,6 @@ def evaluate_results(commands_results_map: typing.Dict[str, int]):
             say_text(f"No entendí {command}")
 
 def process_command_transcript_result(transcript: str) -> typing.Tuple[typing.Dict[str, int], str]:
-    tokens = word_tokenize(transcript.lower())
-    print(pos_tag(tokens))
     transcript = transcript.lower()
     commands = transcript.split(' y ')
     bad_commands_counter = dict()

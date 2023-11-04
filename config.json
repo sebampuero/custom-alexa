@@ -14,7 +14,7 @@
         "min_temp": 20.0,
         "max_temp": 20.4,
         "non_operative_hours": "1-9",
-        "at_home": true,
+        "at_home": false,
         "force_off": false
     },
     "movement_detector": {
