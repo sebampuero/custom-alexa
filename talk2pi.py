@@ -24,7 +24,7 @@ handler = RotatingFileHandler(ConfigHandler().open_config()['log']['output_file'
 handler.setFormatter(formatter)
 logger = logging.getLogger()
 logger.addHandler(handler)
-logger.setLevel(logging.ERROR)
+logger.setLevel(logging.INFO)
 
 
 # Google audio recording parameters and config
