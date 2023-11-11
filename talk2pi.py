@@ -144,7 +144,7 @@ def start_command_capture():
         process_command_transcript_result(transcript)
     return start_porcupine()
 
-def process_command_transcript_result(transcript: str) -> typing.Tuple[typing.Dict[str, int], str]:
+def process_command_transcript_result(transcript: str):
     intent_manager = IntentManager()
     successful = intent_manager.execute_skill_by_intent(transcript)
     if not successful:
