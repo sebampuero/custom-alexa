@@ -25,20 +25,20 @@ class Heater(Skill):
         heater_conf['heater'][min_or_max] = temp
         ConfigHandler().write_config(heater_conf)
 
-    def trigger(self, transcript: str) -> typing.Tuple[bool, str]:
+    def trigger(self, transcript: str, intent: dict = None) -> bool:
         if re.match(Heater.TODAY_HEATER_TIME, transcript):
             today_time_seconds = get_attr_of("total_seconds", f"heater:{todays_timestamp()}")
             if today_time_seconds:
                 say_text(seconds_to_human_readable(int(today_time_seconds)))
             else:
                 say_text("El calefactor no se ha prendido hoy.")
-            return True, Heater.TODAY_HEATER_TIME
+            return True
         elif re.match(Heater.MIN_TEMP, transcript):
             self.__update_temp('min_temp', transcript)
-            return True, Heater.MIN_TEMP
+            return True
         elif re.match(Heater.MAX_TEMP, transcript):
             self.__update_temp('max_temp', transcript)
-            return True, Heater.MAX_TEMP
+            return True
         elif re.match(Heater.LAST_DAYS, transcript):
             days = int(re.search(r'\d{1,2}', transcript).group(0))
             real_days = days
@@ -50,5 +50,5 @@ class Heater(Skill):
                 if not total:
                     days -= 1
             say_text(f"Promedio últimos {real_days} días: {seconds_to_human_readable(int(all/days))}")
-            return True, Heater.LAST_DAYS
-        return False, transcript
+            return True
+        return False

@@ -4,8 +4,8 @@ import typing
 
 class Misc(Skill):
 
-    def trigger(self, transcript: str) -> typing.Tuple[bool, str]:
+    def trigger(self, transcript: str, intent: dict = None) -> bool:
         if transcript == 'nada':
             say_text('Ok')
-            return True, 'nada'
-        return False, transcript
+            return True
+        return False

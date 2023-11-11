@@ -19,11 +19,11 @@ class Chat(Skill):
         super().__init__(name)
         self.__conversation_history = ""
 
-    def trigger(self, transcript: str) -> typing.Tuple[bool, str]:
+    def trigger(self, transcript: str, intent: dict = None) -> bool:
         if transcript == Chat.START_CHAT:
             say_text("Ok, hablemos")
-            return True, Chat.START_CHAT
-        return False, transcript
+            return True
+        return False
     
     def transmit_to_gpt3(self, text): #TODO: change with chat module and not completions
         intro = "La siguiente es una conversación con una inteligencia artificial. La inteligencia artificial es amigable.\n\n"

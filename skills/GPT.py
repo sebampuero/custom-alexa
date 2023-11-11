@@ -40,12 +40,11 @@ class GPT(Skill):
             )
         return response
 
-    def trigger(self, transcript: str) -> typing.Tuple[bool, str]:
-        question_phrase = transcript.split(GPT.QA)
-        if len(question_phrase) == 2:
-            question = question_phrase[1].strip()
+    def trigger(self, transcript: str, intent: dict = None) -> bool:
+        if not intent == None:    
+            question = transcript.replace(intent['GPTVerb'], '')
             messages = []
             messages.append({"role": "user", "content": question})
             asyncio.run(self._main(messages))
-            return True, GPT.QA
-        return False, transcript
+            return True
+        return False

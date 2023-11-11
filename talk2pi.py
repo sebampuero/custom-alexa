@@ -159,10 +159,10 @@ def continous_talk_with_gpt():
 
 def process_command_transcript_result(transcript: str) -> typing.Tuple[typing.Dict[str, int], str]:
     intent_manager = IntentManager()
-    successful, command = intent_manager.execute_skill_by_intent(transcript)
+    successful = intent_manager.execute_skill_by_intent(transcript)
     if not successful:
         start_led(DID_NOT_UNDERSTAND_PIN)
-        say_text(f"No entendí {command}")
+        say_text(f"No pude entenderte.")
 
 if __name__ == "__main__":
     start_scheduler()

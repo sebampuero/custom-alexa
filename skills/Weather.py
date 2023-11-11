@@ -66,20 +66,20 @@ class Weather(Skill):
             if epoch - hour['time_epoch'] >= 0 and epoch - hour['time_epoch'] < 3600:
                 return hour
 
-    def trigger(self, transcript: str) -> typing.Tuple[bool, str]:
+    def trigger(self, transcript: str, intent: dict = None) -> bool:
         if re.match(Weather.THE_TIME, transcript):
             now = datetime.now()
             hour = now.hour
             minute = now.minute
             say_text(f'La hora es {hour} con {minute}')
-            return True, Weather.THE_TIME
+            return True
         elif re.match(Weather.WEATHER_NOW, transcript):
             weather_url_today = Weather.URL + Weather.BASE_PATH_CURRENT
             response = requests.request("GET", weather_url_today)
             response = response.json()
             weather_condition_code = response['current']['condition']['code']
             say_text(f'La sensación de temperatura es {response["current"]["feelslike_c"]} y la real es {response["current"]["temp_c"]}. {self.__get_condition_es(weather_condition_code)}') 
-            return True, Weather.WEATHER_NOW
+            return True
         elif transcript ==  Weather.FORECAST_NEXT_2_DAY:
             forecast_url = Weather.URL + Weather.BASE_PATH_FORECAST + "&days=4&aqi=no&alerts=no"
             response = requests.request("GET", forecast_url)
@@ -93,7 +93,7 @@ class Weather(Skill):
                 self.__will_it_rain_or_snow(forecast_day["day"]["daily_will_it_rain"], forecast_day["day"]["daily_will_it_snow"])
                 weather_condition_code = forecast_day['day']['condition']['code']
                 say_text(self.__get_condition_es(weather_condition_code))
-            return True, Weather.FORECAST_NEXT_2_DAY
+            return True
         elif re.match(Weather.PATTERN_FORECAST_HOURS, transcript):
             forecast_url = Weather.URL + Weather.BASE_PATH_FORECAST + "&days=3&aqi=no&alerts=no"
             response = requests.request("GET", forecast_url)
@@ -106,12 +106,12 @@ class Weather(Skill):
                 forecast = self.__look_up_forecast(hours, forecast_epoch)
                 if forecast == None:
                     say_text("Pronóstico fuera de rango")
-                    return True, Weather.PATTERN_FORECAST_HOURS
+                    return True
                 weather_condition_code = forecast['condition']['code']
                 say_text(f"Temperatura de {forecast['temp_c']} y {self.__get_condition_es(weather_condition_code)}")
                 self.__will_it_rain_or_snow(forecast['will_it_rain'], forecast['will_it_snow'])
                 logger.info(f"Forecast of {forecast}")
             else:
                 say_text("No entendí el pronóstico")
-            return True, Weather.PATTERN_FORECAST_HOURS
-        return False, transcript
+            return True
+        return False

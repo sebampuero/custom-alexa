@@ -9,7 +9,7 @@ class WeightRegister(Skill):
 
     WEIGHT_REG = r"(registra (mi )?peso)|(peso (de )?hoy)"
 
-    def trigger(self, transcript: str) -> typing.Tuple[bool, str]:
+    def trigger(self, transcript: str, intent: dict = None) -> bool:
         if re.match(WeightRegister.WEIGHT_REG, transcript):
             weight = re.search(r'\d{2}((,| coma )\d{1,2})?', transcript).group(0) # search for 90,4 or 90 or 90 coma 4
             if "coma" or ',' in weight:
@@ -20,7 +20,7 @@ class WeightRegister(Skill):
                 say_text(f'Hoy ya has registrado peso, sobre escribiendo el último con {weight} kilos')
                 delete_last()
                 save_weight(weight)
-                return True, WeightRegister.WEIGHT_REG
+                return True
             save_weight(weight)
             say_text(f'Registrando peso en {weight} kilos')
             last_7_entries = get_last_entries(7)
@@ -36,7 +36,7 @@ class WeightRegister(Skill):
                     save_last_week_entry_time(today_time)
                     save_weight_avg(str(round(avg, 2)))
                     delete_key('weight') # delete list of weights
-                    return True, WeightRegister.WEIGHT_REG
+                    return True
             save_last_entry_time(today_time)
-            return True, WeightRegister.WEIGHT_REG
-        return False, transcript
+            return True
+        return False

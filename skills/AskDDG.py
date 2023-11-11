@@ -17,58 +17,57 @@ logger = logging.getLogger(__name__)
 
 class AskDDG(Skill):
 
-    MAX_RESULTS = 10
+    MAX_RESULTS = 20
     MATCHES = 1
     SENTENCES = 2
-    DO_QUERY = r"^(busca|dime).+$"
     BASE_URL = "https://html.duckduckgo.com/html/"
 
-    def trigger(self, transcript: str) -> typing.Tuple[bool, str]:
-        if re.match(AskDDG.DO_QUERY, transcript):
-            query = transcript.replace('dime', '').replace('busca', '').strip()
-            params = {
-                "q": f"{query}?"
-            }
-            headers = {
-                "User-Agent": "Mozilla/5.0"
-            }
-            response = requests.get(AskDDG.BASE_URL, params=params, headers=headers)
-            soup = BeautifulSoup(response.text, features="lxml")
-            results = soup.find_all('a', {"class": "result__snippet"})
-            for idx, res in enumerate(results):
-                if idx > AskDDG.MAX_RESULTS:
-                    break
-                with open(f"{idx}_doc.txt", "w") as f:
-                    f.write(res.get_text())
+    def trigger(self, transcript: str, intent: dict = None) -> bool:
+        query = transcript
+        if not intent == None:
+            query = query.replace(intent['DDGKeyword'], '').replace(intent['DDGVerb'], '')
+        params = {
+            "q": f"{query}?"
+        }
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
+        response = requests.get(AskDDG.BASE_URL, params=params, headers=headers)
+        soup = BeautifulSoup(response.text, features="lxml")
+        results = soup.find_all('a', {"class": "result__snippet"})
+        for idx, res in enumerate(results):
+            if idx > AskDDG.MAX_RESULTS:
+                break
+            with open(f"{idx}_doc.txt", "w") as f:
+                f.write(res.get_text())
 
-            files = self.load_files(".")
-            file_words = {
-                filename: self.tokenize(files[filename])
-                for filename in files
-            }
-            file_idfs = self.compute_idfs(file_words)
-            query = self.tokenize(query)
-            filenames = self.top_files(query, file_words, file_idfs, n=AskDDG.MATCHES)
-            # Extract sentences from top files
-            sentences = dict()
-            for filename in filenames:
-                for passage in files[filename].split("\n"):
-                    for sentence in nltk.sent_tokenize(passage):
-                        tokens = self.tokenize(sentence)
-                        if tokens:
-                            sentences[sentence] = tokens
+        files = self.load_files(".")
+        file_words = {
+            filename: self.tokenize(files[filename])
+            for filename in files
+        }
+        file_idfs = self.compute_idfs(file_words)
+        query = self.tokenize(query)
+        filenames = self.top_files(query, file_words, file_idfs, n=AskDDG.MATCHES)
+        # Extract sentences from top files
+        sentences = dict()
+        for filename in filenames:
+            for passage in files[filename].split("\n"):
+                for sentence in nltk.sent_tokenize(passage):
+                    tokens = self.tokenize(sentence)
+                    if tokens:
+                        sentences[sentence] = tokens
 
-            # Compute IDF values across sentences
-            idfs = self.compute_idfs(sentences)
+        # Compute IDF values across sentences
+        idfs = self.compute_idfs(sentences)
 
-            # Determine top sentence matches
-            matches = self.top_sentences(query, sentences, idfs, n=AskDDG.SENTENCES)
-            for match in matches:
-                say_text(match)
-            for f in glob.glob('*doc.txt'):
-                os.remove(f)
-            return True, AskDDG.DO_QUERY
-        return False, transcript
+        # Determine top sentence matches
+        matches = self.top_sentences(query, sentences, idfs, n=AskDDG.SENTENCES)
+        for match in matches:
+            say_text(match)
+        for f in glob.glob('*doc.txt'):
+            os.remove(f)
+        return True
 
     def load_files(self, directory):
         """

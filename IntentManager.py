@@ -25,6 +25,8 @@ class IntentManager():
         'WeightIntent': 'WeightRegister'
     }
 
+    turn_on_off_verbs = ['prende', 'prender', 'enciende', 'encender','apaga', 'apagar']
+
     def __init__(self):
         self.engine = IntentDeterminationEngine()
         self._init_intents()
@@ -38,64 +40,101 @@ class IntentManager():
                 module = importlib.import_module(module_name)
                 cls = getattr(module, skill_to_invoke)
                 instance = cls(skill_to_invoke)
-                return instance.trigger(utterance)
+                logger.info(f"Going to invoke {skill_to_invoke}")
+                return instance.trigger(utterance.lower(), intent)
+        return False
 
 
     def _init_intents(self):
         ddg_keyword = ['internet']
         ddg_verbs = ['busca', 'buscar', 'averigua', 'averiguar']
+
         bg_keyword = ['azúcar', 'último']
         bg_verbs = ['dime', 'es', 'decir']
+
         computer_keyword = ['computadora', 'compu', 'pc', 'computador', 'ordenador']
-        computer_verbs = ['prende', 'prender', 'enciende', 'encender','apaga', 'apagar']
+        computer_verbs = self.turn_on_off_verbs
+
         weather_keyword = ['clima', 'tiempo', 'pronóstico']
         weather_verbs = ['dime', 'es', 'decir']
-        rgbled_keyword = ['luces']
-        rgbled_verbs = ['prende', 'prender', 'enciende', 'encender','apaga', 'apagar']
+
+        rgbled_keyword = ['luces', 'led']
+        rgbled_verbs = self.turn_on_off_verbs
+
         bulb_keyword = ['luz', 'foco']
-        bulb_verbs = ['prende', 'prender', 'enciende', 'encender','apaga', 'apagar']
+        bulb_colors = ['blanco', 'amarillo', 'azul', 'rojo', 'lila', 'verde']
+        bulb_color_temperature = ['temperatura']
+        bulb_mode = ['modo']
+        bulb_modes = ['dormir', 'estudio', 'estudiar']
+        bulb_brightness = ['brillo', 'intensidad']
+        bulb_verbs = ['pon', 'configura', 'poner', 'configurar'] + self.turn_on_off_verbs
+
         weight_keyword = ['peso']
         weights_verbs = ['registra', 'anota', 'registrar', 'anotar']
+
         heater_keyword = ['calefactor', 'calefacción']
         heater_verbs = ['es', 'dime', 'decir']
-        gpt_verbs = ['respóndeme', 'responde']
+
+        gpt_verbs = ['respóndeme', 'responde', 'dime', 'decir']
+
         reminder_verbs = ['recuérdame', 'hazme acordar']
         for ddg in ddg_keyword:
             self.engine.register_entity(ddg, "DDGKeyword")
         for ddg in ddg_verbs:
             self.engine.register_entity(ddg, "DDGVerb")
+
         for bg in bg_keyword:
             self.engine.register_entity(bg, "BGKeyword")
         for bg in bg_verbs:
             self.engine.register_entity(bg, "BGVerb")
+
         for computer in computer_keyword:
             self.engine.register_entity(computer, "ComputerKeyword")
         for computer in computer_verbs:
             self.engine.register_entity(computer, "ComputerVerb")
+
         for weather in weather_keyword:
             self.engine.register_entity(weather, "WeatherKeyword")
         for weather in weather_verbs:
             self.engine.register_entity(weather, "WeatherVerb")
+
         for rgbled in rgbled_keyword:
             self.engine.register_entity(rgbled, "RGBLEDKeyword")
         for rgbled in rgbled_verbs:
             self.engine.register_entity(rgbled, "RGBLEDVerb")
+
         for bulb in bulb_keyword:
             self.engine.register_entity(bulb, "BulbKeyword")
         for bulb in bulb_verbs:
             self.engine.register_entity(bulb, "BulbVerb")
+        for bulb in bulb_colors:
+            self.engine.register_entity(bulb, "BulbColor")
+        for bulb in bulb_color_temperature:
+            self.engine.register_entity(bulb, "BulbTemperature")
+        for bulb in bulb_mode:
+            self.engine.register_entity(bulb, "BulbMode")
+        for bulb in bulb_modes:
+           self.engine.register_entity(bulb, "BulbModes")
+        for bulb in bulb_brightness:
+           self.engine.register_entity(bulb, "BulbBrightness")
+        
+
         for weight in weight_keyword:
             self.engine.register_entity(weight, "WeightKeyword")
         for weight in weights_verbs:
             self.engine.register_entity(weight, "WeightVerb")
+
         for heater in heater_keyword:
             self.engine.register_entity(heater, "HeaterKeyword")
         for heater in heater_verbs:
             self.engine.register_entity(heater, "HeaterVerb")
+
         for gpt in gpt_verbs:
             self.engine.register_entity(gpt, "GPTVerb")
+
         for reminder in reminder_verbs:
             self.engine.register_entity(reminder, "ReminderVerb")
+
         ddg_intent = IntentBuilder("DDGIntent")\
             .require("DDGKeyword")\
             .require("DDGVerb")\
@@ -119,6 +158,11 @@ class IntentManager():
         bulb_intent = IntentBuilder("BulbIntent")\
                     .require("BulbKeyword")\
                     .require("BulbVerb")\
+                    .optionally('BulbColor')\
+                    .optionally('BulbTemperature')\
+                    .optionally('BulbMode')\
+                    .optionally('BulbModes')\
+                    .optionally('BulbBrightness')\
                     .build()
         weight_intent = IntentBuilder("WeightIntent")\
                     .require("WeightKeyword")\
