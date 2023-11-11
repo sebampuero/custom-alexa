@@ -143,19 +143,6 @@ def start_command_capture():
         logger.info("Processing: %s", transcript)
         process_command_transcript_result(transcript)
     return start_porcupine()
-        
-def proceed_with_diverge(skill_module: str):
-    if skill_module == skills['Chat'].START_CHAT:
-        continous_talk_with_gpt()
-
-def continous_talk_with_gpt():
-    while True:
-        start_led(READY_TO_TALK_PIN)
-        transcript = get_transcript_from_google()
-        if transcript == skills['Chat'].STOP_CHAT or transcript == "":
-            return start_porcupine()
-        stop_led(READY_TO_TALK_PIN)
-        skills['Chat'].transmit_to_gpt3(transcript)
 
 def process_command_transcript_result(transcript: str) -> typing.Tuple[typing.Dict[str, int], str]:
     intent_manager = IntentManager()
