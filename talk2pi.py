@@ -8,6 +8,7 @@ from google.cloud import speech
 from google.api_core.exceptions import InvalidArgument
 from cronjob.scheduler import start_scheduler
 from pi_concurrent.MovementDetector import MovementDetector
+from IntentManager import IntentManager
 import ResumableMicrophoneStream
 import time
 import typing
@@ -16,8 +17,6 @@ import struct
 import pyaudio
 import pvporcupine
 import nltk
-from nltk.tokenize import word_tokenize
-from nltk import pos_tag
 
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 handler = RotatingFileHandler(ConfigHandler().open_config()['log']['output_file'], maxBytes=5*1024*1024, backupCount=1)
@@ -142,10 +141,7 @@ def start_command_capture():
     transcript = get_transcript_from_google()
     if not transcript == "":
         logger.info("Processing: %s", transcript)
-        commands_results_map, skill_if_diverged = process_command_transcript_result(transcript)
-        if not skill_if_diverged == "":
-            return proceed_with_diverge(skill_if_diverged)
-        evaluate_results(commands_results_map)
+        process_command_transcript_result(transcript)
     return start_porcupine()
         
 def proceed_with_diverge(skill_module: str):
@@ -161,31 +157,12 @@ def continous_talk_with_gpt():
         stop_led(READY_TO_TALK_PIN)
         skills['Chat'].transmit_to_gpt3(transcript)
 
-def evaluate_results(commands_results_map: typing.Dict[str, int]):
-    for command, counter in commands_results_map.items():
-        if counter == len(skills.keys()):
-            start_led(DID_NOT_UNDERSTAND_PIN)
-            say_text(f"No entendí {command}")
-
 def process_command_transcript_result(transcript: str) -> typing.Tuple[typing.Dict[str, int], str]:
-    transcript = transcript.lower()
-    commands = transcript.split(' y ')
-    bad_commands_counter = dict()
-    for name, skill in skills.items():
-        for a_command in commands:
-            try:
-                successful, command = skill.trigger(a_command)
-            except Exception:
-                logger.error("Ejecutando skill", exc_info=True)
-                say_text("Hubo un error ejecutando el comando")
-            if not successful:
-                if a_command not in  bad_commands_counter.keys():
-                    bad_commands_counter[a_command] = 1
-                else:
-                    bad_commands_counter[a_command] += 1
-            if command == skills['Chat'].START_CHAT: #TODO: delegate in other function if this grows
-                return bad_commands_counter, skills['Chat'].START_CHAT
-    return bad_commands_counter, ""
+    intent_manager = IntentManager()
+    successful, command = intent_manager.execute_skill_by_intent(transcript)
+    if not successful:
+        start_led(DID_NOT_UNDERSTAND_PIN)
+        say_text(f"No entendí {command}")
 
 if __name__ == "__main__":
     start_scheduler()

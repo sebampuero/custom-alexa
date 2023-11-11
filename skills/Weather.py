@@ -14,7 +14,7 @@ from dateparser_data.settings import default_parsers
 logger = logging.getLogger(__name__)
 
 
-class Thetime(Skill):
+class Weather(Skill):
 
     KEY = os.getenv("WEATHER_KEY")
     URL = "https://api.weatherapi.com/v1/"
@@ -67,21 +67,21 @@ class Thetime(Skill):
                 return hour
 
     def trigger(self, transcript: str) -> typing.Tuple[bool, str]:
-        if re.match(Thetime.THE_TIME, transcript):
+        if re.match(Weather.THE_TIME, transcript):
             now = datetime.now()
             hour = now.hour
             minute = now.minute
             say_text(f'La hora es {hour} con {minute}')
-            return True, Thetime.THE_TIME
-        elif re.match(Thetime.WEATHER_NOW, transcript):
-            weather_url_today = Thetime.URL + Thetime.BASE_PATH_CURRENT
+            return True, Weather.THE_TIME
+        elif re.match(Weather.WEATHER_NOW, transcript):
+            weather_url_today = Weather.URL + Weather.BASE_PATH_CURRENT
             response = requests.request("GET", weather_url_today)
             response = response.json()
             weather_condition_code = response['current']['condition']['code']
             say_text(f'La sensación de temperatura es {response["current"]["feelslike_c"]} y la real es {response["current"]["temp_c"]}. {self.__get_condition_es(weather_condition_code)}') 
-            return True, Thetime.WEATHER_NOW
-        elif transcript ==  Thetime.FORECAST_NEXT_2_DAY:
-            forecast_url = Thetime.URL + Thetime.BASE_PATH_FORECAST + "&days=4&aqi=no&alerts=no"
+            return True, Weather.WEATHER_NOW
+        elif transcript ==  Weather.FORECAST_NEXT_2_DAY:
+            forecast_url = Weather.URL + Weather.BASE_PATH_FORECAST + "&days=4&aqi=no&alerts=no"
             response = requests.request("GET", forecast_url)
             response = response.json()
             forecasts = response['forecast']['forecastday']
@@ -93,12 +93,12 @@ class Thetime(Skill):
                 self.__will_it_rain_or_snow(forecast_day["day"]["daily_will_it_rain"], forecast_day["day"]["daily_will_it_snow"])
                 weather_condition_code = forecast_day['day']['condition']['code']
                 say_text(self.__get_condition_es(weather_condition_code))
-            return True, Thetime.FORECAST_NEXT_2_DAY
-        elif re.match(Thetime.PATTERN_FORECAST_HOURS, transcript):
-            forecast_url = Thetime.URL + Thetime.BASE_PATH_FORECAST + "&days=3&aqi=no&alerts=no"
+            return True, Weather.FORECAST_NEXT_2_DAY
+        elif re.match(Weather.PATTERN_FORECAST_HOURS, transcript):
+            forecast_url = Weather.URL + Weather.BASE_PATH_FORECAST + "&days=3&aqi=no&alerts=no"
             response = requests.request("GET", forecast_url)
             response = response.json()
-            forecast_query = re.match(Thetime.PATTERN_FORECAST_HOURS, transcript).group(1)
+            forecast_query = re.match(Weather.PATTERN_FORECAST_HOURS, transcript).group(1)
             forecast_epoch = dateparser.parse(forecast_query, settings=self.__settings)
             if forecast_epoch:
                 forecast_epoch = int(forecast_epoch.timestamp())
@@ -106,12 +106,12 @@ class Thetime(Skill):
                 forecast = self.__look_up_forecast(hours, forecast_epoch)
                 if forecast == None:
                     say_text("Pronóstico fuera de rango")
-                    return True, Thetime.PATTERN_FORECAST_HOURS
+                    return True, Weather.PATTERN_FORECAST_HOURS
                 weather_condition_code = forecast['condition']['code']
                 say_text(f"Temperatura de {forecast['temp_c']} y {self.__get_condition_es(weather_condition_code)}")
                 self.__will_it_rain_or_snow(forecast['will_it_rain'], forecast['will_it_snow'])
                 logger.info(f"Forecast of {forecast}")
             else:
                 say_text("No entendí el pronóstico")
-            return True, Thetime.PATTERN_FORECAST_HOURS
+            return True, Weather.PATTERN_FORECAST_HOURS
         return False, transcript
