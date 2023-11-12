@@ -7,7 +7,7 @@ class Skill(ABC):
         self.__name = name
 
     @abstractmethod
-    def trigger(self, transcript: str, intent: dict = None) -> bool:
+    def trigger(self, transcript: str, intent: dict) -> bool:
         """
         Execute this skill's task based on transcript passed. If transcript does not match this skill, return the original transcript and False
         """

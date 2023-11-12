@@ -41,10 +41,8 @@ class GPT(Skill):
         return response
 
     def trigger(self, transcript: str, intent: dict = None) -> bool:
-        if not intent == None:    
-            question = transcript.replace(intent['GPTVerb'], '')
-            messages = []
-            messages.append({"role": "user", "content": question})
-            asyncio.run(self._main(messages))
-            return True
-        return False
+        question = transcript.replace(intent['GPTVerb'], '')
+        messages = []
+        messages.append({"role": "user", "content": question})
+        asyncio.run(self._main(messages))
+        return True

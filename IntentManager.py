@@ -49,17 +49,19 @@ class IntentManager():
         ddg_keyword = ['internet']
         ddg_verbs = ['busca', 'buscar', 'averigua', 'averiguar']
 
-        bg_keyword = ['azúcar', 'último']
+        bg_keyword = ['azúcar']
         bg_verbs = ['dime', 'es', 'decir']
+        bg_time = ['último']
 
         computer_keyword = ['computadora', 'compu', 'pc', 'computador', 'ordenador']
         computer_verbs = self.turn_on_off_verbs
 
-        weather_keyword = ['clima', 'tiempo', 'pronóstico']
-        weather_verbs = ['dime', 'es', 'decir']
+        weather_keyword = ['clima', 'tiempo', 'pronóstico', 'hora']
+        weather_verbs = ['dime', 'es', 'decir', 'ser', 'estar', 'será', 'estará', 'está']
 
         rgbled_keyword = ['luces', 'led']
-        rgbled_verbs = self.turn_on_off_verbs
+        rgbled_verbs = ['pon', 'poner', 'configura', 'configurar', 'ajusta', 'ajustar'] + self.turn_on_off_verbs
+        rgbled_colors = ['amarillo', 'azul', 'rojo', 'lila', 'verde']
 
         bulb_keyword = ['luz', 'foco']
         bulb_colors = ['blanco', 'amarillo', 'azul', 'rojo', 'lila', 'verde']
@@ -71,13 +73,19 @@ class IntentManager():
 
         weight_keyword = ['peso']
         weights_verbs = ['registra', 'anota', 'registrar', 'anotar']
+        weight_unit = ['kg', 'kilos']
 
         heater_keyword = ['calefactor', 'calefacción']
-        heater_verbs = ['es', 'dime', 'decir']
+        heater_verbs = ['es', 'dime', 'decir', 'sido', 'pon', 'poner', 'configura', 'configurar', 'ajustar', 'ajusta', 'estado']
+        heater_time = ['tiempo']
+        heater_temperature = ['temperatura']
+        heater_temperature_values = ['mínima', 'máxima']
 
         gpt_verbs = ['respóndeme', 'responde', 'dime', 'decir']
 
-        reminder_verbs = ['recuérdame', 'hazme acordar']
+        reminder_keywords = ['recordatorio']
+        reminder_verbs = ['recuérdame', 'hazme acordar', 'elimina', 'eliminar', 'es', 'será', 'borra', 'borrar']
+        reminder_time = ['próximo', 'siguiente', 'último']
         for ddg in ddg_keyword:
             self.engine.register_entity(ddg, "DDGKeyword")
         for ddg in ddg_verbs:
@@ -87,6 +95,8 @@ class IntentManager():
             self.engine.register_entity(bg, "BGKeyword")
         for bg in bg_verbs:
             self.engine.register_entity(bg, "BGVerb")
+        for bg in bg_time:
+            self.engine.register_entity(bg, "BGTime")
 
         for computer in computer_keyword:
             self.engine.register_entity(computer, "ComputerKeyword")
@@ -102,6 +112,8 @@ class IntentManager():
             self.engine.register_entity(rgbled, "RGBLEDKeyword")
         for rgbled in rgbled_verbs:
             self.engine.register_entity(rgbled, "RGBLEDVerb")
+        for rgbled in rgbled_colors:
+            self.engine.register_entity(rgbled, "RGBLEDColor")
 
         for bulb in bulb_keyword:
             self.engine.register_entity(bulb, "BulbKeyword")
@@ -123,17 +135,29 @@ class IntentManager():
             self.engine.register_entity(weight, "WeightKeyword")
         for weight in weights_verbs:
             self.engine.register_entity(weight, "WeightVerb")
+        for weight in weight_unit:
+            self.engine.register_entity(weight, "WeightUnit")
 
         for heater in heater_keyword:
             self.engine.register_entity(heater, "HeaterKeyword")
         for heater in heater_verbs:
             self.engine.register_entity(heater, "HeaterVerb")
+        for heater in heater_time:
+            self.engine.register_entity(heater, "HeaterTime")
+        for heater in heater_temperature:
+            self.engine.register_entity(heater, "HeaterTemperature")
+        for heater in heater_temperature_values:
+            self.engine.register_entity(heater, "HeaterTemperatureValues")
 
         for gpt in gpt_verbs:
             self.engine.register_entity(gpt, "GPTVerb")
 
+        for reminder in reminder_keywords:
+            self.engine.register_entity(reminder, "ReminderKeyword")
         for reminder in reminder_verbs:
             self.engine.register_entity(reminder, "ReminderVerb")
+        for reminder in reminder_time:
+            self.engine.register_entity(reminder, "ReminderTime")
 
         ddg_intent = IntentBuilder("DDGIntent")\
             .require("DDGKeyword")\
@@ -142,6 +166,7 @@ class IntentManager():
         bg_intent = IntentBuilder("BGIntent")\
             .require("BGKeyword")\
             .require("BGVerb")\
+            .optionally("BGTime")\
             .build()
         computer_intent = IntentBuilder("ComputerIntent")\
                     .require("ComputerKeyword")\
@@ -154,6 +179,7 @@ class IntentManager():
         rgbled_intent = IntentBuilder("RGBLEDIntent")\
                     .require("RGBLEDKeyword")\
                     .require("RGBLEDVerb")\
+                    .optionally("RGBLEDColor")\
                     .build()
         bulb_intent = IntentBuilder("BulbIntent")\
                     .require("BulbKeyword")\
@@ -166,17 +192,23 @@ class IntentManager():
                     .build()
         weight_intent = IntentBuilder("WeightIntent")\
                     .require("WeightKeyword")\
-                    .require("WeightsVerb")\
+                    .require("WeightVerb")\
+                    .optionally("WeightUnit")\
                     .build()
         heater_intent = IntentBuilder("HeaterIntent")\
                     .require("HeaterKeyword")\
                     .require("HeaterVerb")\
+                    .optionally("HeaterTime")\
+                    .optionally("HeaterTemperature")\
+                    .optionally("HeaterTemperatureValues")\
                     .build()
         gpt_intent = IntentBuilder("GPTIntent")\
                     .require("GPTVerb")\
                     .build()
         reminder_intent = IntentBuilder("ReminderIntent")\
+                    .optionally("ReminderKeyword")\
                     .require("ReminderVerb")\
+                    .optionally("ReminderTime")\
                     .build()
         self.engine.register_intent_parser(ddg_intent)
         self.engine.register_intent_parser(bg_intent)

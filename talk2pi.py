@@ -38,11 +38,6 @@ CAPTURE_TIMEOUT=30 # seconds
 
 BASE_DIR = ConfigHandler().open_config()['base_dir']
 
-test_mode = False
-
-# Dictionary of skills
-skills = {}
-
 
 client = speech.SpeechClient()
 config = speech.RecognitionConfig(
@@ -54,13 +49,6 @@ config = speech.RecognitionConfig(
 streaming_config = speech.StreamingRecognitionConfig(
     config=config, interim_results=True
 )
-
-for entry in os.scandir(BASE_DIR + "/skills"):
-    if (entry.name.endswith(".py") and not entry.name == "Skill.py"): #Abstract class
-        skill_name = os.path.splitext(entry.name)[0]
-        skill_class = getattr(importlib.import_module(name=f"skills.{skill_name}"), skill_name)
-        skills[skill_name] = skill_class(skill_name)
-
 
 def start_porcupine() -> None:
     # https://picovoice.ai/

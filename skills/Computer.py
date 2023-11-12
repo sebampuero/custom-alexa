@@ -8,7 +8,7 @@ class Computer(Skill):
     TURN_ON_PC = r".*(enciende|encender|prende|prender).*"
     TURN_OFF_PC = r".*(apaga|apagar).*"
 
-    def trigger(self, transcript: str, intent: dict = None) -> bool:
+    def trigger(self, transcript: str, intent: dict) -> bool:
         if re.match(Computer.TURN_ON_PC, transcript):
             print("Turning on pc")
             os.system("sudo etherwake -i wlan0 60:45:CB:64:2D:03")

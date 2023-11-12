@@ -21,10 +21,10 @@ class Weather(Skill):
     BASE_PATH_FORECAST = f"forecast.json?key={KEY}&q=Berlin"
     BASE_PATH_CURRENT = f"current.json?key={KEY}&q=Berlin&aqi=no"
 
-    THE_TIME = r"((qué)|(que) hora es)|(dime (la)? hora)"
-    FORECAST_NEXT_2_DAY = "pronóstico"
-    PATTERN_FORECAST_HOURS = r"pronóstico (.*)"
-    WEATHER_NOW = r"(cuál es el clima)|(clima)"
+    THE_TIME = "hora"
+    FORECAST = "pronóstico"
+    WEATHER_FUTURE_VERBS = ['será', 'ser', 'estar', 'estará']
+    WEATHER = r".*(clima|tiempo).*"
 
     def __init__(self, name: str) -> None:
         super().__init__(name)
@@ -66,52 +66,51 @@ class Weather(Skill):
             if epoch - hour['time_epoch'] >= 0 and epoch - hour['time_epoch'] < 3600:
                 return hour
 
-    def trigger(self, transcript: str, intent: dict = None) -> bool:
-        if re.match(Weather.THE_TIME, transcript):
+    def _forecast_weather(self, forecast_datetime: str):
+        forecast_url = Weather.URL + Weather.BASE_PATH_FORECAST + "&days=3&aqi=no&alerts=no"
+        response = requests.request("GET", forecast_url)
+        response = response.json()
+        forecast_epoch = dateparser.parse(forecast_datetime, settings=self.__settings)
+        if forecast_epoch:
+            forecast_epoch = int(forecast_epoch.timestamp())
+            hours = self.__combine_days(response)
+            forecast = self.__look_up_forecast(hours, forecast_epoch)
+            if forecast == None:
+                say_text("Pronóstico fuera de rango")
+            weather_condition_code = forecast['condition']['code']
+            say_text(f"Temperatura de {forecast['temp_c']} y {self.__get_condition_es(weather_condition_code)}")
+            self.__will_it_rain_or_snow(forecast['will_it_rain'], forecast['will_it_snow'])
+            logger.info(f"Forecast of {forecast}")
+        else:
+            say_text(f"No entendí la fecha del pronóstico {forecast_datetime}")
+
+    def trigger(self, transcript: str, intent: dict) -> bool:
+        if intent['WeatherKeyword'] == Weather.FORECAST:
+            forecast_datetime = transcript.split(intent['WeatherKeyword'])[1].strip()
+            if forecast_datetime == '':
+                say_text("Tienes que darme una fecha a futuro no mayor a dos días.")
+                return True
+            self._forecast_weather(forecast_datetime)
+            return True
+        elif re.match(Weather.WEATHER, intent['WeatherKeyword']) and \
+            intent['WeatherVerb'] in Weather.WEATHER_FUTURE_VERBS:
+            forecast_datetime = transcript.split(intent['WeatherKeyword'])[1].strip()
+            if forecast_datetime == '':
+                say_text("Tienes que darme una fecha a futuro no mayor a dos días.")
+                return True
+            self._forecast_weather(forecast_datetime)
+            return True
+        elif intent['WeatherKeyword'] == Weather.THE_TIME:
             now = datetime.now()
             hour = now.hour
             minute = now.minute
             say_text(f'La hora es {hour} con {minute}')
             return True
-        elif re.match(Weather.WEATHER_NOW, transcript):
+        else:
             weather_url_today = Weather.URL + Weather.BASE_PATH_CURRENT
             response = requests.request("GET", weather_url_today)
             response = response.json()
             weather_condition_code = response['current']['condition']['code']
             say_text(f'La sensación de temperatura es {response["current"]["feelslike_c"]} y la real es {response["current"]["temp_c"]}. {self.__get_condition_es(weather_condition_code)}') 
-            return True
-        elif transcript ==  Weather.FORECAST_NEXT_2_DAY:
-            forecast_url = Weather.URL + Weather.BASE_PATH_FORECAST + "&days=4&aqi=no&alerts=no"
-            response = requests.request("GET", forecast_url)
-            response = response.json()
-            forecasts = response['forecast']['forecastday']
-            for i in range(1,3):
-                forecast_day = forecasts[i]
-                weekday = datetime.fromtimestamp(forecast_day['date_epoch']).weekday()
-                day = DAYS_OF_WEEK[weekday]
-                say_text(f'{day} con una máxima de {round(forecast_day["day"]["maxtemp_c"])} y mínima de {round(forecast_day["day"]["mintemp_c"])}, promedio de {round(forecast_day["day"]["avgtemp_c"])}')
-                self.__will_it_rain_or_snow(forecast_day["day"]["daily_will_it_rain"], forecast_day["day"]["daily_will_it_snow"])
-                weather_condition_code = forecast_day['day']['condition']['code']
-                say_text(self.__get_condition_es(weather_condition_code))
-            return True
-        elif re.match(Weather.PATTERN_FORECAST_HOURS, transcript):
-            forecast_url = Weather.URL + Weather.BASE_PATH_FORECAST + "&days=3&aqi=no&alerts=no"
-            response = requests.request("GET", forecast_url)
-            response = response.json()
-            forecast_query = re.match(Weather.PATTERN_FORECAST_HOURS, transcript).group(1)
-            forecast_epoch = dateparser.parse(forecast_query, settings=self.__settings)
-            if forecast_epoch:
-                forecast_epoch = int(forecast_epoch.timestamp())
-                hours = self.__combine_days(response)
-                forecast = self.__look_up_forecast(hours, forecast_epoch)
-                if forecast == None:
-                    say_text("Pronóstico fuera de rango")
-                    return True
-                weather_condition_code = forecast['condition']['code']
-                say_text(f"Temperatura de {forecast['temp_c']} y {self.__get_condition_es(weather_condition_code)}")
-                self.__will_it_rain_or_snow(forecast['will_it_rain'], forecast['will_it_snow'])
-                logger.info(f"Forecast of {forecast}")
-            else:
-                say_text("No entendí el pronóstico")
             return True
         return False

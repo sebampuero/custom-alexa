@@ -12,11 +12,6 @@ logger = logging.getLogger(__name__)
 
 class Heater(Skill):
 
-    TODAY_HEATER_TIME = r"(tiempo) (del )?(calefactor) (hoy)"
-    MIN_TEMP = r"(temperatura )?(mínima)"
-    MAX_TEMP = r"(temperatura )?(máxima)"
-    LAST_DAYS = r"(tiempo) (del )?(calefactor) (últimos) \d{1,2} (días)"
-
     def __update_temp(self, min_or_max: str, transcript: str) -> None:
         heater_conf = ConfigHandler().open_config()
         temp = re.search(r'\d{2}((,| coma )\d{1,2})?', transcript).group(0) # search for 20,4 or 20 or 20 coma 4
@@ -24,22 +19,18 @@ class Heater(Skill):
             temp = float(temp.replace(' coma ', '.').replace(',', '.'))
         heater_conf['heater'][min_or_max] = temp
         ConfigHandler().write_config(heater_conf)
+        min_or_max_text = 'máxima' if min_or_max == 'max_temp' else 'mínima'
+        say_text(f"Temperatura {min_or_max_text} puesta en {temp} grados.")
 
-    def trigger(self, transcript: str, intent: dict = None) -> bool:
-        if re.match(Heater.TODAY_HEATER_TIME, transcript):
-            today_time_seconds = get_attr_of("total_seconds", f"heater:{todays_timestamp()}")
-            if today_time_seconds:
-                say_text(seconds_to_human_readable(int(today_time_seconds)))
-            else:
-                say_text("El calefactor no se ha prendido hoy.")
-            return True
-        elif re.match(Heater.MIN_TEMP, transcript):
-            self.__update_temp('min_temp', transcript)
-            return True
-        elif re.match(Heater.MAX_TEMP, transcript):
-            self.__update_temp('max_temp', transcript)
-            return True
-        elif re.match(Heater.LAST_DAYS, transcript):
+    def trigger(self, transcript: str, intent: dict) -> bool:
+        if 'HeaterTime' in intent:
+            if 'hoy' in transcript:
+                today_time_seconds = get_attr_of("total_seconds", f"heater:{todays_timestamp()}")
+                if today_time_seconds:
+                    say_text(seconds_to_human_readable(int(today_time_seconds)))
+                else:
+                    say_text("El calefactor no se ha prendido hoy.")
+                return True
             days = int(re.search(r'\d{1,2}', transcript).group(0))
             real_days = days
             all = 0
@@ -50,5 +41,11 @@ class Heater(Skill):
                 if not total:
                     days -= 1
             say_text(f"Promedio últimos {real_days} días: {seconds_to_human_readable(int(all/days))}")
+            return True
+        elif 'HeaterTemperature' in intent and 'HeaterTemperatureValues' in intent:
+            if intent['HeaterTemperatureValues'] == 'mínima':
+                self.__update_temp('min_temp', transcript)
+                return True
+            self.__update_temp('max_temp', transcript)
             return True
         return False

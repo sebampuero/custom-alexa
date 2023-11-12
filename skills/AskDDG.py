@@ -22,10 +22,8 @@ class AskDDG(Skill):
     SENTENCES = 2
     BASE_URL = "https://html.duckduckgo.com/html/"
 
-    def trigger(self, transcript: str, intent: dict = None) -> bool:
-        query = transcript
-        if not intent == None:
-            query = query.replace(intent['DDGKeyword'], '').replace(intent['DDGVerb'], '')
+    def trigger(self, transcript: str, intent: dict) -> bool:
+        query = transcript.replace(intent['DDGKeyword'], '').replace(intent['DDGVerb'], '')
         params = {
             "q": f"{query}?"
         }

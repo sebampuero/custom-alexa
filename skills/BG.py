@@ -26,7 +26,7 @@ class BG(Skill):
         "Flat": "Estable"
     }
 
-    def trigger(self, transcript: str, intent: dict = None) -> bool:
+    def trigger(self, transcript: str, intent: dict) -> bool:
         bg_config = ConfigHandler().open_config()
         response = requests.request('GET', BG.BASE_URL + f"entries.json?token={BG.JWT}")
         response = response.json()
