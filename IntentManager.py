@@ -5,6 +5,7 @@ from adapt.engine import IntentDeterminationEngine
 from utils.config import ConfigHandler
 import logging
 import importlib
+from utils.speak import say_text
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,11 @@ class IntentManager():
                 cls = getattr(module, skill_to_invoke)
                 instance = cls(skill_to_invoke)
                 logger.info(f"Going to invoke {skill_to_invoke}")
-                return instance.trigger(utterance.lower(), intent)
+                try:
+                    return instance.trigger(utterance.lower(), intent)
+                except:
+                    logger.error(exc_info=True)
+                    say_text(f"Hubo un error ejecutando {utterance}")
         return False
 
 
@@ -56,7 +61,7 @@ class IntentManager():
         computer_keyword = ['computadora', 'compu', 'pc', 'computador', 'ordenador']
         computer_verbs = self.turn_on_off_verbs
 
-        weather_keyword = ['clima', 'tiempo', 'pronóstico', 'hora']
+        weather_keyword = ['clima', 'pronóstico', 'hora']
         weather_verbs = ['dime', 'es', 'decir', 'ser', 'estar', 'será', 'estará', 'está']
 
         rgbled_keyword = ['luces', 'led']
@@ -69,7 +74,7 @@ class IntentManager():
         bulb_mode = ['modo']
         bulb_modes = ['dormir', 'estudio', 'estudiar']
         bulb_brightness = ['brillo', 'intensidad']
-        bulb_verbs = ['pon', 'configura', 'poner', 'configurar'] + self.turn_on_off_verbs
+        bulb_verbs = ['pon', 'configura', 'poner', 'configurar', 'ajustar'] + self.turn_on_off_verbs
 
         weight_keyword = ['peso']
         weights_verbs = ['registra', 'anota', 'registrar', 'anotar']
