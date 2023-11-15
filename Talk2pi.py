@@ -11,7 +11,7 @@ import ResumableMicrophoneStream
 import time
 import os
 import struct
-import pyaudio
+import pyaudio # sudo apt-get install portaudio19-dev ?
 import pvporcupine
 
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')

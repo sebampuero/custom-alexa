@@ -44,7 +44,10 @@ def delete_last_reminder(last_reminder_key):
     return redis_db.remove_last_reminder(last_reminder_key)
 
 def get_last_reminder() -> str:
-    return get_reminders()[0][0] # first obj in tuple in list
+    try:
+        return get_reminders()[0][0], get_reminders()[0][1]
+    except:
+        return None, None
 
 def remove_reminder_like(to_remove: str) -> typing.Tuple[str, str]:
     return redis_db.remove_reminder_like(to_remove)
