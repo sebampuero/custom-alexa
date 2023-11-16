@@ -4,3 +4,4 @@ repo_token
 request.json
 *.mp3
 *.out
+venv/

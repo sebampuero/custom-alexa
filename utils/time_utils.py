@@ -11,6 +11,8 @@ DAYS_OF_WEEK = {
     6: 'Domingo'
 }
 
+DAY_SECONDS = 86400
+
 def todays_timestamp():
     today = datetime.today().strftime('%Y-%m-%d')
     return int(time.mktime(datetime.strptime(today, "%Y-%m-%d").timetuple()))
@@ -42,3 +44,16 @@ def seconds_to_human_readable(seconds: int) -> str:
         minutes = f"{rem_minutes} minutos " if rem_minutes > 1 else f"{rem_minutes} minuto"
         parsed_seconds = f"{hours_txt} y {minutes}"
     return parsed_seconds
+
+def remaining_seconds_to_human_readable(future_ts: int) -> str:
+    rest_ts = future_ts - int(datetime.now().timestamp())
+    div = int(rest_ts/DAY_SECONDS)
+    hour = datetime.fromtimestamp(future_ts).hour
+    minute = datetime.fromtimestamp(future_ts).minute
+    if div == 1:
+        return f"mañana a las {hour} y {minute}"
+    elif div > 1 and div < 7:
+        return f"en {div} días, a las {hour} y {minute}"
+    elif div == 0:
+        return f"hoy a las {hour} y {minute}"
+    return None

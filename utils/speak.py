@@ -3,6 +3,7 @@ from boto3 import Session
 from contextlib import closing
 from botocore.exceptions import BotoCoreError, ClientError
 import logging
+import os
 logger = logging.getLogger(__name__)
 
 def say_text(my_text):
@@ -19,6 +20,7 @@ def say_text(my_text):
                 with open("say.mp3", "wb") as file:
                     file.write(stream.read())
             call(["mpg123", "say.mp3"])
+            os.remove("say.mp3")
     else:
         logger.error(f"No audio data in stream", exc_info=True)
 

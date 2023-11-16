@@ -7,6 +7,7 @@ import typing
 import re
 from dateparser_data.settings import default_parsers
 from datetime import datetime
+from utils.time_utils import remaining_seconds_to_human_readable
 import locale
 locale.setlocale(locale.LC_TIME, 'es_MX.UTF-8')
 
@@ -54,9 +55,13 @@ class Reminder(Skill):
             if re.match(Reminder.REM_NEXT, intent['ReminderTime']):
                 next_reminder_text, next_reminder_ts = get_last_reminder()
                 if next_reminder_text and next_reminder_ts:
-                    dt_object = datetime.fromtimestamp(int(next_reminder_ts))
-                    human_readable_time = dt_object.strftime('%d de %B de %Y a las %I:%M %p')
-                    say_text(f"Siguiente recordatorio {next_reminder_text} {human_readable_time}")
+                    reminder_relative_datetime = remaining_seconds_to_human_readable(next_reminder_ts)
+                    if reminder_relative_datetime:
+                        say_text(f"Siguiente recordatorio {next_reminder_text}, {reminder_relative_datetime}")
+                    else:
+                        dt_object = datetime.fromtimestamp(int(next_reminder_ts))
+                        reminder_abs_datetime = dt_object.strftime('%d de %B de %Y a las %I:%M %p')
+                        say_text(f"Siguiente recordatorio {next_reminder_text}, el {reminder_abs_datetime}")
                     return True
                 say_text("No hay recordatorios pendientes")
                 return True
